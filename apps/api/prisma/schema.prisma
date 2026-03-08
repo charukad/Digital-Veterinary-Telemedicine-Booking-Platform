@@ -1,0 +1,664 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserType {
+  PET_OWNER
+  VETERINARIAN
+  CLINIC_ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  UNKNOWN
+}
+
+enum Species {
+  DOG
+  CAT
+  BIRD
+  RABBIT
+  HAMSTER
+  GUINEA_PIG
+  TURTLE
+  FISH
+  OTHER
+}
+
+enum AppointmentType {
+  IN_CLINIC
+  HOME_VISIT
+  TELEMEDICINE
+  EMERGENCY
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  PAYHERE_CARD
+  PAYHERE_BANK
+  EZPAY
+  GENIE
+  WALLET
+}
+
+enum Language {
+  ENGLISH
+  SINHALA
+  TAMIL
+}
+
+enum NotificationType {
+  APPOINTMENT
+  PAYMENT
+  MESSAGE
+  REVIEW
+  SYSTEM
+}
+
+enum TransactionType {
+  TOP_UP
+  DEDUCTION
+  REFUND
+  WITHDRAWAL
+}
+
+// ============================================
+// USER MODELS
+// ============================================
+
+model User {
+  id            String     @id @default(uuid())
+  email         String     @unique
+  phone         String?    @unique
+  passwordHash  String     @map("password_hash")
+  userType      UserType   @map("user_type")
+  status        UserStatus @default(PENDING_VERIFICATION)
+
+  emailVerified Boolean    @default(false) @map("email_verified")
+  phoneVerified Boolean    @default(false) @map("phone_verified")
+  profileImage  String?    @map("profile_image")
+  refreshToken  String?    @map("refresh_token")
+
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  petOwner      PetOwner?
+  veterinarian  Veterinarian?
+  admin         Admin?
+  payments      Payment[]
+  reviews       Review[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model PetOwner {
+  id                String    @id @default(uuid())
+  userId            String    @unique @map("user_id")
+  firstName         String    @map("first_name")
+  lastName          String    @map("last_name")
+  profileImage      String?   @map("profile_image")
+  languagePreference Language @default(ENGLISH) @map("language_preference")
+
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pets              Pet[]
+  addresses         Address[]
+  appointments      Appointment[]
+
+  @@map("pet_owners")
+}
+
+model Veterinarian {
+  id                    String   @id @default(uuid())
+  userId                String   @unique @map("user_id")
+  licenseNumber         String   @unique @map("license_number")
+  bio                   String?  @db.Text
+  yearsOfExperience     Int?     @map("years_of_experience")
+
+  consultationFeeClinic   Decimal  @default(0) @map("consultation_fee_clinic") @db.Decimal(10, 2)
+  consultationFeeHome     Decimal  @default(0) @map("consultation_fee_home") @db.Decimal(10, 2)
+  consultationFeeOnline   Decimal  @default(0) @map("consultation_fee_online") @db.Decimal(10, 2)
+
+  verified              Boolean  @default(false)
+  profileImage          String?  @map("profile_image")
+  rating                Decimal  @default(0) @db.Decimal(3, 2)
+  reviewCount           Int      @default(0) @map("review_count")
+
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  qualifications        VetQualification[]
+  specializations       VetSpecialization[]
+  clinicAffiliations    ClinicVeterinarian[]
+  availabilitySlots     AvailabilitySlot[]
+  appointments          Appointment[]
+  consultations         Consultation[]
+  reviews               Review[]
+
+  @@map("veterinarians")
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
+  role      String   @default("admin")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("admins")
+}
+
+// ============================================
+// PET MODELS
+// ============================================
+
+model Pet {
+  id                String    @id @default(uuid())
+  ownerId           String    @map("owner_id")
+  name              String
+  species           Species
+  breed             String?
+  dateOfBirth       DateTime? @map("date_of_birth")
+  gender            Gender    @default(UNKNOWN)
+  weight            Decimal?  @db.Decimal(5, 2)
+  color             String?
+  microchipId       String?   @unique @map("microchip_id")
+  profileImage      String?   @map("profile_image")
+
+  allergies         String?   @db.Text
+  chronicConditions String?   @map("chronic_conditions") @db.Text
+  currentMedications String?  @map("current_medications") @db.Text
+
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  owner             PetOwner       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  appointments      Appointment[]
+  healthRecords     HealthRecord[]
+  vaccinations      Vaccination[]
+
+  @@map("pets")
+}
+
+// ============================================
+// CLINIC MODELS
+// ============================================
+
+model Clinic {
+  id                  String   @id @default(uuid())
+  name                String
+  registrationNumber  String?  @unique @map("registration_number")
+  address             String   @db.Text
+  latitude            Decimal? @db.Decimal(10, 8)
+  longitude           Decimal? @db.Decimal(11, 8)
+  phone               String
+  email               String?
+  operatingHours      Json?    @map("operating_hours")
+  facilities          String[] @default([])
+  status              UserStatus @default(PENDING_VERIFICATION)
+
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  veterinarians       ClinicVeterinarian[]
+  appointments        Appointment[]
+
+  @@map("clinics")
+}
+
+model ClinicVeterinarian {
+  id              String   @id @default(uuid())
+  clinicId        String   @map("clinic_id")
+  veterinarianId  String   @map("veterinarian_id")
+  isPrimary       Boolean  @default(false) @map("is_primary")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relations
+  clinic          Clinic       @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  veterinarian    Veterinarian @relation(fields: [veterinarianId], references: [id], onDelete: Cascade)
+
+  @@unique([clinicId, veterinarianId])
+  @@map("clinic_veterinarians")
+}
+
+// ============================================
+// VETERINARIAN PROFILE MODELS
+// ============================================
+
+model VetQualification {
+  id              String   @id @default(uuid())
+  veterinarianId  String   @map("veterinarian_id")
+  degree          String
+  institution     String
+  yearObtained    Int      @map("year_obtained")
+  certificateUrl  String?  @map("certificate_url")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relations
+  veterinarian    Veterinarian @relation(fields: [veterinarianId], references: [id], onDelete: Cascade)
+
+  @@map("vet_qualifications")
+}
+
+model VetSpecialization {
+  id              String   @id @default(uuid())
+  veterinarianId  String   @map("veterinarian_id")
+  specialization  String
+
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relations
+  veterinarian    Veterinarian @relation(fields: [veterinarianId], references: [id], onDelete: Cascade)
+
+  @@map("vet_specializations")
+}
+
+model AvailabilitySlot {
+  id              String   @id @default(uuid())
+  veterinarianId  String   @map("veterinarian_id")
+  dayOfWeek       Int      @map("day_of_week") // 0 = Sunday, 6 = Saturday
+  startTime       String   @map("start_time")  // HH:mm format
+  endTime         String   @map("end_time")    // HH:mm format
+  isAvailable     Boolean  @default(true) @map("is_available")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  veterinarian    Veterinarian @relation(fields: [veterinarianId], references: [id], onDelete: Cascade)
+
+  @@map("availability_slots")
+}
+
+// ============================================
+// ADDRESS MODEL
+// ============================================
+
+model Address {
+  id          String   @id @default(uuid())
+  ownerId     String   @map("owner_id")
+  addressLine1 String  @map("address_line1")
+  addressLine2 String? @map("address_line2")
+  city        String
+  district    String?
+  postalCode  String?  @map("postal_code")
+  latitude    Decimal? @db.Decimal(10, 8)
+  longitude   Decimal? @db.Decimal(11, 8)
+  isDefault   Boolean  @default(false) @map("is_default")
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  owner       PetOwner @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@map("addresses")
+}
+
+// ============================================
+// APPOINTMENT MODELS
+// ============================================
+
+model Appointment {
+  id                String            @id @default(uuid())
+  petId             String            @map("pet_id")
+  veterinarianId    String            @map("veterinarian_id")
+  clinicId          String?           @map("clinic_id")
+  ownerId           String            @map("owner_id")
+
+  type              AppointmentType
+  status            AppointmentStatus @default(PENDING)
+  scheduledAt       DateTime          @map("scheduled_at")
+  durationMinutes   Int               @default(30) @map("duration_minutes")
+
+  symptoms          String?           @db.Text
+  notes             String?           @db.Text
+
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  pet               Pet               @relation(fields: [petId], references: [id], onDelete: Cascade)
+  veterinarian      Veterinarian      @relation(fields: [veterinarianId], references: [id], onDelete: Cascade)
+  clinic            Clinic?           @relation(fields: [clinicId], references: [id], onDelete: SetNull)
+  owner             PetOwner          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  consultation      Consultation?
+  payment           Payment?
+
+  @@index([scheduledAt])
+  @@index([veterinarianId, scheduledAt])
+  @@map("appointments")
+}
+
+// ============================================
+// CONSULTATION MODELS
+// ============================================
+
+model Consultation {
+  id              String    @id @default(uuid())
+  appointmentId   String    @unique @map("appointment_id")
+
+  startTime       DateTime? @map("start_time")
+  endTime         DateTime? @map("end_time")
+  diagnosis       String?   @db.Text
+  treatmentPlan   String?   @map("treatment_plan") @db.Text
+  vetNotes        String?   @map("vet_notes") @db.Text
+  recordingUrl    String?   @map("recording_url")
+
+  agoraChannelName String?  @map("agora_channel_name")
+  agoraSessionData Json?    @map("agora_session_data")
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  appointment     Appointment      @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  veterinarian    Veterinarian     @relation(fields: [veterinarianId], references: [id])
+  veterinarianId  String           @map("veterinarian_id")
+
+  prescriptions   Prescription[]
+  chatMessages    ChatMessage[]
+  files           ConsultationFile[]
+
+  @@map("consultations")
+}
+
+model Prescription {
+  id              String   @id @default(uuid())
+  consultationId  String   @map("consultation_id")
+
+  medications     Json     // Array of {name, dosage, frequency, duration}
+  instructions    String?  @db.Text
+  validUntil      DateTime? @map("valid_until")
+  signatureUrl    String?  @map("signature_url")
+  pdfUrl          String?  @map("pdf_url")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  consultation    Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+
+  @@map("prescriptions")
+}
+
+model ChatMessage {
+  id              String   @id @default(uuid())
+  consultationId  String   @map("consultation_id")
+  senderId        String   @map("sender_id")
+  senderType      UserType @map("sender_type")
+
+  messageType     String   @default("text") @map("message_type") // text, image, file
+  content         String   @db.Text
+  fileUrl         String?  @map("file_url")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relations
+  consultation    Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+
+  @@index([consultationId, createdAt])
+  @@map("chat_messages")
+}
+
+model ConsultationFile {
+  id              String   @id @default(uuid())
+  consultationId  String   @map("consultation_id")
+  fileName        String   @map("file_name")
+  fileUrl         String   @map("file_url")
+  fileType        String   @map("file_type")
+  fileSize        Int      @map("file_size")
+  uploadedBy      String   @map("uploaded_by")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relations
+  consultation    Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+
+  @@map("consultation_files")
+}
+
+// ============================================
+// PAYMENT MODELS
+// ============================================
+
+model Payment {
+  id              String        @id @default(uuid())
+  appointmentId   String        @unique @map("appointment_id")
+  userId          String        @map("user_id")
+
+  amount          Decimal       @db.Decimal(10, 2)
+  currency        String        @default("LKR")
+  paymentMethod   PaymentMethod @map("payment_method")
+  status          PaymentStatus @default(PENDING)
+
+  transactionId   String?       @unique @map("transaction_id")
+  gatewayResponse Json?         @map("gateway_response")
+
+  paidAt          DateTime?     @map("paid_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  appointment     Appointment   @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  user            User          @relation(fields: [userId], references: [id])
+
+  @@map("payments")
+}
+
+// ============================================
+// HEALTH RECORD MODELS
+// ============================================
+
+model HealthRecord {
+  id          String   @id @default(uuid())
+  petId       String   @map("pet_id")
+  vetId       String?  @map("vet_id")
+
+  recordType  String   @map("record_type") // checkup, surgery, lab_result, etc.
+  title       String
+  description String?  @db.Text
+  recordDate  DateTime @map("record_date")
+  attachments Json?    // Array of file URLs
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  pet         Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId, recordDate])
+  @@map("health_records")
+}
+
+model Vaccination {
+  id               String    @id @default(uuid())
+  petId            String    @map("pet_id")
+  vetId            String?   @map("vet_id")
+
+  vaccineName      String    @map("vaccine_name")
+  batchNumber      String?   @map("batch_number")
+  administeredDate DateTime  @map("administered_date")
+  nextDueDate      DateTime? @map("next_due_date")
+  certificateUrl   String?   @map("certificate_url")
+
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  pet              Pet       @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId, nextDueDate])
+  @@map("vaccinations")
+}
+
+// ============================================
+// REVIEW MODEL
+// ============================================
+
+model Review {
+  id              String   @id @default(uuid())
+  veterinarianId  String   @map("veterinarian_id")
+  userId          String   @map("user_id")
+  appointmentId   String   @unique @map("appointment_id")
+
+  rating          Int      // 1-5
+  comment         String?  @db.Text
+  photos          String[] @default([])
+  vetResponse     String?  @map("vet_response") @db.Text
+
+  // Enhancement fields
+  helpfulCount    Int      @default(0) @map("helpful_count")
+  reported        Boolean  @default(false)
+  reportReason    String?  @map("report_reason") @db.Text
+  reportedBy      String?  @map("reported_by")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  veterinarian    Veterinarian @relation(fields: [veterinarianId], references: [id], onDelete: Cascade)
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([veterinarianId])
+  @@map("reviews")
+}
+
+// ============================================
+// NOTIFICATION MODEL
+// ============================================
+
+model Notification {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+
+  title       String
+  message     String   @db.Text
+  type        String   // appointment, payment, review, system
+  data        Json?    // Additional context data
+
+  isRead      Boolean  @default(false) @map("is_read")
+  readAt      DateTime? @map("read_at")
+
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+// ============================================
+// OTP MODEL
+// ============================================
+
+model OTP {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+
+  code      String
+  type      String   @default("email_verification") // email_verification, password_reset, login
+  expiresAt DateTime @map("expires_at")
+  verified  Boolean  @default(false)
+  attempts  Int      @default(0)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, type])
+  @@map("otps")
+}
+
+// ============================================
+// WALLET MODELS
+// ============================================
+
+model Wallet {
+  id           String            @id @default(uuid())
+  userId       String            @unique @map("user_id")
+
+  balance      Decimal           @default(0) @db.Decimal(10, 2)
+
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  transactions WalletTransaction[]
+
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id            String          @id @default(uuid())
+  walletId      String          @map("wallet_id")
+
+  type          TransactionType
+  amount        Decimal         @db.Decimal(10, 2)
+  description   String
+  reference     String?         // Payment ID, Appointment ID, etc.
+
+  balanceBefore Decimal         @db.Decimal(10, 2) @map("balance_before")
+  balanceAfter  Decimal         @db.Decimal(10, 2) @map("balance_after")
+
+  createdAt     DateTime        @default(now()) @map("created_at")
+
+  // Relations
+  wallet        Wallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId, createdAt])
+  @@map("wallet_transactions")
+}
+
