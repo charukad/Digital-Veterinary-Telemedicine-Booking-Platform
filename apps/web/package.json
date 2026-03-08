@@ -18,8 +18,10 @@
     "react-dom": "19.2.3",
     "react-hook-form": "^7.71.1",
     "socket.io-client": "^4.8.3",
-    "zod": "^4.3.5",
-    "zustand": "^5.0.10"
+    "zod": "^3.23.8",
+    "zustand": "^5.0.10",
+    "@vetcare/validations": "workspace:*",
+    "@vetcare/types": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

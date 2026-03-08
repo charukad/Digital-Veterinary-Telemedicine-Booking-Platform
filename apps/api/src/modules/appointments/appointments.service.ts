@@ -340,10 +340,42 @@ export class AppointmentsService {
   async checkAvailability(vetId: string, date: string, startTime: string) {
     // Parse the requested start time
     const requestedStart = new Date(`${date}T${startTime}`);
+    const dayOfWeek = requestedStart.getDay();
     const durationMinutes = 30; // Default consultation duration
     const requestedEnd = new Date(requestedStart.getTime() + durationMinutes * 60000);
 
-    // Get appointments for that day to check for conflicts
+    // 1. Check if the vet has an availability slot for this day/time
+    const timeToMinutes = (time: string) => {
+      const [h, m] = time.split(':').map(Number);
+      return h * 60 + m;
+    };
+
+    const requestedStartMinutes = requestedStart.getHours() * 60 + requestedStart.getMinutes();
+    const requestedEndMinutes = requestedStartMinutes + durationMinutes;
+
+    const availableSlots = await this.prisma.availabilitySlot.findMany({
+      where: {
+        veterinarianId: vetId,
+        dayOfWeek,
+        isAvailable: true,
+      },
+    });
+
+    const isWithinSlot = availableSlots.some(slot => {
+      const slotStart = timeToMinutes(slot.startTime);
+      const slotEnd = timeToMinutes(slot.endTime);
+      return requestedStartMinutes >= slotStart && requestedEndMinutes <= slotEnd;
+    });
+
+    if (!isWithinSlot) {
+      return {
+        available: false,
+        reason: 'Outside of veterinarian working hours',
+        requestedSlot: { date, startTime },
+      };
+    }
+
+    // 2. Check for conflicting appointments
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(date);
@@ -368,7 +400,6 @@ export class AppointmentsService {
       },
     });
 
-    // Check if the requested time slot overlaps with any existing appointment
     const hasConflict = conflicts.some((appointment) => {
       const existingStart = new Date(appointment.scheduledAt);
       const existingEnd = new Date(
@@ -384,6 +415,7 @@ export class AppointmentsService {
 
     return {
       available: !hasConflict,
+      reason: hasConflict ? 'Time slot already booked' : null,
       conflictingAppointments: hasConflict ? conflicts : [],
       requestedSlot: {
         date,

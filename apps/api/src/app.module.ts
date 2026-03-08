@@ -20,6 +20,8 @@ import { ClinicsModule } from './modules/clinics/clinics.module';
 import { EmergencyContactsModule } from './modules/emergency-contacts/emergency-contacts.module';
 import { AddressesModule } from './modules/addresses/addresses.module';
 import { PetInsuranceModule } from './modules/pet-insurance/pet-insurance.module';
+import { TelemedicineModule } from './modules/telemedicine/telemedicine.module';
+import { ChatModule } from './modules/chat/chat.module';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 
@@ -55,6 +57,8 @@ import { PrismaModule } from './prisma/prisma.module';
     EmergencyContactsModule,
     AddressesModule,
     PetInsuranceModule,
+    TelemedicineModule,
+    ChatModule,
     HealthModule,
   ],
 })

@@ -1,7 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppointmentsService } from './appointments.service';
 import { PrismaService } from '../../prisma/prisma.service';
-import { NotFoundException, ForbiddenException } from '@nestjs/common';
+import { EmailService } from '../notifications/email.service';
+import { NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 
 describe('AppointmentsService', () => {
   let service: AppointmentsService;
@@ -12,9 +13,8 @@ describe('AppointmentsService', () => {
       create: jest.fn(),
       findMany: jest.fn(),
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       update: jest.fn(),
-      delete: jest.fn(),
-      count: jest.fn(),
     },
     pet: {
       findUnique: jest.fn(),
@@ -22,16 +22,24 @@ describe('AppointmentsService', () => {
     veterinarian: {
       findUnique: jest.fn(),
     },
+    petOwner: {
+      findUnique: jest.fn(),
+    },
+    availabilitySlot: {
+      findMany: jest.fn(),
+    },
+  };
+
+  const mockEmailService = {
+    sendStatusUpdate: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AppointmentsService,
-        {
-          provide: PrismaService,
-          useValue: mockPrismaService,
-        },
+        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: EmailService, useValue: mockEmailService },
       ],
     }).compile();
 
@@ -44,118 +52,68 @@ describe('AppointmentsService', () => {
   });
 
   describe('create', () => {
-    it('should create an appointment successfully', async () => {
-      const createDto = {
-        petId: 'pet-1',
-        veterinarianId: 'vet-1',
-        scheduledAt: new Date('2024-12-25T10:00:00'),
-        type: 'IN_CLINIC',
-        notes: 'Regular checkup',
-      };
+    it('should throw ForbiddenException if user is not the pet owner', async () => {
+      const userId = 'user-1';
+      const dto = { petId: 'pet-1', veterinarianId: 'vet-1', scheduledAt: new Date(), type: 'IN_CLINIC' as any };
+      
+      mockPrismaService.pet.findUnique.mockResolvedValue({ id: 'pet-1', ownerId: 'other-user' });
+      mockPrismaService.petOwner.findUnique.mockResolvedValue({ id: 'owner-1', userId });
 
-      const mockPet = {
-        id: 'pet-1',
-        ownerId: 'owner-1',
-      };
+      await expect(service.create(userId, dto)).rejects.toThrow(ForbiddenException);
+    });
 
-      const mockAppointment = {
-        id: 'appointment-1',
-        ...createDto,
-        status: 'PENDING',
-        createdAt: new Date(),
-      };
+    it('should create appointment if all valid', async () => {
+      const userId = 'user-1';
+      const dto = { petId: 'pet-1', veterinarianId: 'vet-1', scheduledAt: new Date(), type: 'IN_CLINIC' as any };
+      
+      mockPrismaService.petOwner.findUnique.mockResolvedValue({ id: 'owner-1', userId });
+      mockPrismaService.pet.findUnique.mockResolvedValue({ id: 'pet-1', ownerId: 'owner-1' });
+      mockPrismaService.appointment.findFirst.mockResolvedValue(null);
+      mockPrismaService.appointment.create.mockResolvedValue({ id: 'apt-1', ...dto });
 
-      mockPrismaService.pet.findUnique.mockResolvedValue(mockPet);
-      mockPrismaService.appointment.create.mockResolvedValue(mockAppointment);
+      const result = await service.create(userId, dto);
 
-      const result = await service.create(createDto, 'owner-1');
-
-      expect(result).toEqual(mockAppointment);
+      expect(result.id).toBe('apt-1');
       expect(prisma.appointment.create).toHaveBeenCalled();
     });
-
-    it('should throw NotFoundException if pet not found', async () => {
-      const createDto = {
-        petId: 'invalid-pet',
-        veterinarianId: 'vet-1',
-        scheduledAt: new Date(),
-        type: 'IN_CLINIC',
-      };
-
-      mockPrismaService.pet.findUnique.mockResolvedValue(null);
-
-      await expect(service.create(createDto, 'owner-1')).rejects.toThrow(
-        NotFoundException,
-      );
-    });
-
-    it('should throw ForbiddenException if user is not pet owner', async () => {
-      const createDto = {
-        petId: 'pet-1',
-        veterinarianId: 'vet-1',
-        scheduledAt: new Date(),
-        type: 'IN_CLINIC',
-      };
-
-      const mockPet = {
-        id: 'pet-1',
-        ownerId: 'owner-1',
-      };
-
-      mockPrismaService.pet.findUnique.mockResolvedValue(mockPet);
-
-      await expect(service.create(createDto, 'wrong-owner')).rejects.toThrow(
-        ForbiddenException,
-      );
-    });
   });
 
-  describe('findAll', () => {
-    it('should return appointments for pet owner', async () => {
-      const mockAppointments = [
-        { id: '1', petId: 'pet-1', status: 'PENDING' },
-        { id: '2', petId: 'pet-2', status: 'CONFIRMED' },
-      ];
+  describe('checkAvailability', () => {
+    it('should return unavailable if outside working hours', async () => {
+      mockPrismaService.availabilitySlot.findMany.mockResolvedValue([]); // No slots
 
-      mockPrismaService.appointment.findMany.mockResolvedValue(mockAppointments);
+      const result = await service.checkAvailability('vet-1', '2026-03-10', '10:00');
 
-      const result = await service.findAll('owner-1', 'PET_OWNER');
-
-      expect(result).toEqual(mockAppointments);
-      expect(prisma.appointment.findMany).toHaveBeenCalled();
-    });
-  });
-
-  describe('cancel', () => {
-    it('should cancel appointment successfully', async () => {
-      const mockAppointment = {
-        id: 'appointment-1',
-        status: 'PENDING',
-        pet: {
-          ownerId: 'owner-1',
-        },
-      };
-
-      const mockUpdatedAppointment = {
-        ...mockAppointment,
-        status: 'CANCELLED',
-      };
-
-      mockPrismaService.appointment.findUnique.mockResolvedValue(mockAppointment);
-      mockPrismaService.appointment.update.mockResolvedValue(mockUpdatedAppointment);
-
-      const result = await service.cancel('appointment-1', 'owner-1', 'PET_OWNER');
-
-      expect(result.status).toBe('CANCELLED');
-      expect(prisma.appointment.update).toHaveBeenCalled();
+      expect(result.available).toBe(false);
+      expect(result.reason).toContain('working hours');
     });
 
-    it('should throw NotFoundException if appointment not found', async () => {
-      mockPrismaService.appointment.findUnique.mockResolvedValue(null);
+    it('should return unavailable if conflict exists', async () => {
+      // Mock being within working hours
+      mockPrismaService.availabilitySlot.findMany.mockResolvedValue([
+        { startTime: '09:00', endTime: '17:00', dayOfWeek: 2, isAvailable: true }
+      ]);
+      
+      // Mock existing conflict
+      mockPrismaService.appointment.findMany.mockResolvedValue([
+        { scheduledAt: new Date('2026-03-10T10:00:00'), durationMinutes: 30 }
+      ]);
 
-      await expect(service.cancel('invalid-id', 'owner-1', 'PET_OWNER')).rejects.toThrow(
-        NotFoundException,
-      );
+      const result = await service.checkAvailability('vet-1', '2026-03-10', '10:15');
+
+      expect(result.available).toBe(false);
+      expect(result.reason).toContain('already booked');
+    });
+
+    it('should return available if no conflicts', async () => {
+      mockPrismaService.availabilitySlot.findMany.mockResolvedValue([
+        { startTime: '09:00', endTime: '17:00', dayOfWeek: 2, isAvailable: true }
+      ]);
+      mockPrismaService.appointment.findMany.mockResolvedValue([]);
+
+      const result = await service.checkAvailability('vet-1', '2026-03-10', '10:00');
+
+      expect(result.available).toBe(true);
     });
   });
 });

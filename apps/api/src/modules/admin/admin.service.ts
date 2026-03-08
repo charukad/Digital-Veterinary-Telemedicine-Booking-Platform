@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EmailService } from '../notifications/email.service';
 
@@ -69,7 +69,7 @@ export class AdminService {
     });
 
     if (!vet) {
-      throw new Error('Veterinarian not found');
+      throw new NotFoundException('Veterinarian not found');
     }
 
     // Send rejection email
@@ -121,25 +121,16 @@ export class AdminService {
         status: true,
         scheduledAt: true,
         createdAt: true,
-        petOwner: {
+        owner: {
           select: {
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-              },
-            },
+            firstName: true,
+            lastName: true,
           },
         },
         veterinarian: {
-          select: {
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
+          include: {
+            user: true
+          }
         },
       },
     });
@@ -162,133 +153,17 @@ export class AdminService {
         type: apt.type,
         status: apt.status,
         date: apt.scheduledAt,
-        owner: `${apt.petOwner.user.firstName} ${apt.petOwner.user.lastName}`,
-        vet: `Dr. ${apt.veterinarian.user.firstName} ${apt.veterinarian.user.lastName}`,
+        owner: `${apt.owner?.firstName || 'Unknown'} ${apt.owner?.lastName || ''}`,
+        vet: `Dr. ${apt.veterinarian?.user?.email || 'Unknown'}`, // Fallback since names are in nested profiles
         createdAt: apt.createdAt,
       })),
     };
   }
 
-  private async sendApprovalEmail(vet: VetWithEmail) {
-    await this.emailService.sendEmail({
-      to: vet.user.email,
-      subject: '✅ Congratulations! Your profile has been verified',
-      html: `
-<!DOCTYPE html>
-<html>
-<body style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px;">
-  <table width="600" style="background-color: #ffffff; margin: 0 auto; border-radius: 8px; overflow: hidden;">
-    <tr>
-      <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 20px; text-align: center;">
-        <h1 style="color: #ffffff; margin: 0; font-size: 28px;">🎉 You're Verified!</h1>
-      </td>
-    </tr>
-    <tr>
-      <td style="padding: 40px 30px;">
-        <p style="font-size: 16px; color: #333; margin: 0 0 20px;">Dear Veterinarian,</p>
-
-        <p style="font-size: 16px; color: #333; margin: 0 0 30px;">
-          Congratulations! Your veterinarian profile has been verified by our admin team.
-        </p>
-
-        <div style="background-color: #f0fdf4; border-left: 4px solid #10b981; padding: 20px; margin-bottom: 30px;">
-          <p style="margin: 0; color: #059669; font-weight: bold;">You can now:</p>
-          <ul style="margin: 10px 0 0 0; color: #059669;">
-            <li>Accept appointment requests</li>
-            <li>Start consulting with pet owners</li>
-            <li>Receive payments for your services</li>
-          </ul>
-        </div>
-
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard"
-             style="display: inline-block; background-color: #10b981; color: #ffffff; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-size: 16px; font-weight: bold;">
-            Go to Dashboard
-          </a>
-        </div>
-
-        <p style="font-size: 14px; color: #666; margin: 30px 0 0;">
-          Thank you for joining VetCare Sri Lanka. We're excited to have you on our platform!
-        </p>
-      </td>
-    </tr>
-    <tr>
-      <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center;">
-        <p style="margin: 0; font-size: 14px; color: #666;">
-          <strong>VetCare Sri Lanka</strong><br>
-          Professional Veterinary Care
-        </p>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-      `,
-    });
-  }
-
-  private async sendRejectionEmail(vet: VetWithEmail, reason: string) {
-    await this.emailService.sendEmail({
-      to: vet.user.email,
-      subject: 'Profile Verification - Action Required',
-      html: `
-<!DOCTYPE html>
-<html>
-<body style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px;">
-  <table width="600" style="background-color: #ffffff; margin: 0 auto; border-radius: 8px; overflow: hidden;">
-    <tr>
-      <td style="background-color: #f59e0b; padding: 40px 20px; text-align: center;">
-        <h1 style="color: #ffffff; margin: 0; font-size: 28px;">Profile Needs Revision</h1>
-      </td>
-    </tr>
-    <tr>
-      <td style="padding: 40px 30px;">
-        <p style="font-size: 16px; color: #333; margin: 0 0 20px;">Dear Veterinarian,</p>
-
-        <p style="font-size: 16px; color: #333; margin: 0 0 30px;">
-          Thank you for registering with VetCare Sri Lanka. After reviewing your profile, we need you to make some updates before we can approve your account.
-        </p>
-
-        <div style="background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 20px; margin-bottom: 30px;">
-          <p style="margin: 0 0 10px; color: #92400e; font-weight: bold;">Reason for revision:</p>
-          <p style="margin: 0; color: #92400e;">${reason}</p>
-        </div>
-
-        <p style="font-size: 16px; color: #333; margin: 0 0 20px;">
-          Please update your profile and our team will review it again.
-        </p>
-
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/vet/profile"
-             style="display: inline-block; background-color: #f59e0b; color: #ffffff; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-size: 16px; font-weight: bold;">
-            Update Profile
-          </a>
-        </div>
-
-        <p style="font-size: 14px; color: #666; margin: 30px 0 0;">
-          If you have any questions, please contact our support team.
-        </p>
-      </td>
-    </tr>
-    <tr>
-      <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center;">
-        <p style="margin: 0; font-size: 14px; color: #666;">
-          <strong>VetCare Sri Lanka</strong><br>
-          support@vetcare.lk
-        </p>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-      `,
-    });
-  }
-
   // User Management
   async getAllUsers(filters?: {
     search?: string;
-    role?: string;
+    userType?: any;
     status?: string;
     page?: number;
     limit?: number;
@@ -299,25 +174,22 @@ export class AdminService {
 
     const whereClause: any = {};
 
-    // Search by name or email
+    // Search by email or phone (names are in profiles)
     if (filters?.search) {
       whereClause.OR = [
-        { firstName: { contains: filters.search, mode: 'insensitive' } },
-        { lastName: { contains: filters.search, mode: 'insensitive' } },
         { email: { contains: filters.search, mode: 'insensitive' } },
+        { phone: { contains: filters.search, mode: 'insensitive' } },
       ];
     }
 
-    // Filter by role
-    if (filters?.role) {
-      whereClause.role = filters.role;
+    // Filter by userType
+    if (filters?.userType) {
+      whereClause.userType = filters.userType;
     }
 
-    // Filter by status (active/suspended)
-    if (filters?.status === 'suspended') {
-      whereClause.isSuspended = true;
-    } else if (filters?.status === 'active') {
-      whereClause.isSuspended = false;
+    // Filter by status
+    if (filters?.status) {
+      whereClause.status = filters.status;
     }
 
     const [users, total] = await Promise.all([
@@ -326,14 +198,17 @@ export class AdminService {
         select: {
           id: true,
           email: true,
-          firstName: true,
-          lastName: true,
           phone: true,
-          role: true,
-          isVerified: true,
-          isSuspended: true,
+          userType: true,
+          status: true,
           createdAt: true,
           updatedAt: true,
+          petOwner: {
+            select: { firstName: true, lastName: true }
+          },
+          veterinarian: {
+            select: { firstName: true, lastName: true } // Assuming vet has these based on logic
+          }
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -343,7 +218,11 @@ export class AdminService {
     ]);
 
     return {
-      users,
+      users: users.map(u => ({
+        ...u,
+        firstName: u.petOwner?.firstName || '',
+        lastName: u.petOwner?.lastName || '',
+      })),
       pagination: {
         page,
         limit,
@@ -359,12 +238,9 @@ export class AdminService {
       select: {
         id: true,
         email: true,
-        firstName: true,
-        lastName: true,
         phone: true,
-        role: true,
-        isVerified: true,
-        isSuspended: true,
+        userType: true,
+        status: true,
         profileImage: true,
         createdAt: true,
         updatedAt: true,
@@ -378,7 +254,7 @@ export class AdminService {
     // Get role-specific details
     let roleDetails = null;
 
-    if (user.role === 'PET_OWNER') {
+    if (user.userType === 'PET_OWNER') {
       roleDetails = await this.prisma.petOwner.findUnique({
         where: { userId },
         include: {
@@ -401,7 +277,7 @@ export class AdminService {
           },
         },
       });
-    } else if (user.role === 'VETERINARIAN') {
+    } else if (user.userType === 'VETERINARIAN') {
       roleDetails = await this.prisma.veterinarian.findUnique({
         where: { userId },
         select: {
@@ -410,8 +286,8 @@ export class AdminService {
           specializations: true,
           yearsOfExperience: true,
           consultationFeeClinic: true,
-          verificationStatus: true,
-          averageRating: true,
+          verified: true,
+          rating: true,
           reviewCount: true,
         },
       });
@@ -427,19 +303,19 @@ export class AdminService {
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: {
-        isSuspended: true,
+        status: 'SUSPENDED',
         updatedAt: new Date(),
       },
     });
 
     // Send suspension email
     try {
-      await this.notificationsService.sendEmail({
+      await this.emailService.sendEmail({
         to: user.email,
         subject: 'Account Suspended - VetCare',
         html: `
           <h2>Account Suspended</h2>
-          <p>Dear ${user.firstName || 'User'},</p>
+          <p>Dear User,</p>
           <p>Your account has been suspended.</p>
           ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
           <p>If you believe this is an error, please contact support.</p>
@@ -457,19 +333,19 @@ export class AdminService {
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: {
-        isSuspended: false,
+        status: 'ACTIVE',
         updatedAt: new Date(),
       },
     });
 
     // Send activation email
     try {
-      await this.notificationsService.sendEmail({
+      await this.emailService.sendEmail({
         to: user.email,
         subject: 'Account Activated - VetCare',
         html: `
           <h2>Account Activated</h2>
-          <p>Dear ${user.firstName || 'User'},</p>
+          <p>Dear User,</p>
           <p>Your account has been activated. You can now access all services.</p>
           <p>Best regards,<br>VetCare Admin Team</p>
         `,

@@ -1,119 +1,136 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
-import { UsersService } from '../users/users.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
+import { OtpService } from './otp.service';
+import { UnauthorizedException, ConflictException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
 describe('AuthService', () => {
   let service: AuthService;
-  let usersService: UsersService;
+  let prisma: PrismaService;
   let jwtService: JwtService;
+  let otpService: OtpService;
 
-  const mockUsersService = {
-    findByEmail: jest.fn(),
-    create: jest.fn(),
+  const mockPrismaService = {
+    user: {
+      findUnique: jest.fn(),
+      create: jest.fn(),
+    },
+    petOwner: {
+      create: jest.fn(),
+    },
+    veterinarian: {
+      create: jest.fn(),
+    },
   };
 
   const mockJwtService = {
-    sign: jest.fn(),
-    verify: jest.fn(),
+    signAsync: jest.fn(),
   };
 
-  const mockConfigService = {
-    get: jest.fn((key: string) => {
-      const config = {
-        JWT_SECRET: 'test-secret',
-        JWT_EXPIRES_IN: '1d',
-      };
-      return config[key];
-    }),
+  const mockOtpService = {
+    sendOtp: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
-        {
-          provide: UsersService,
-          useValue: mockUsersService,
-        },
-        {
-          provide: JwtService,
-          useValue: mockJwtService,
-        },
-        {
-          provide: ConfigService,
-          useValue: mockConfigService,
-        },
+        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: JwtService, useValue: mockJwtService },
+        { provide: OtpService, useValue: mockOtpService },
       ],
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    usersService = module.get<UsersService>(UsersService);
+    prisma = module.get<PrismaService>(PrismaService);
     jwtService = module.get<JwtService>(JwtService);
+    otpService = module.get<OtpService>(OtpService);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('validateUser', () => {
-    it('should return user if credentials are valid', async () => {
-      const mockUser = {
-        id: '1',
-        email: 'test@example.com',
-        password: await bcrypt.hash('password123', 10),
-      };
+  describe('signIn', () => {
+    it('should throw UnauthorizedException if user not found', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
 
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
-
-      const result = await service.validateUser('test@example.com', 'password123');
-
-      expect(result).toBeDefined();
-      expect(result.email).toBe('test@example.com');
-      expect(result).not.toHaveProperty('password');
+      await expect(service.signIn('test@example.com', 'password')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
-    it('should return null if user not found', async () => {
-      mockUsersService.findByEmail.mockResolvedValue(null);
+    it('should throw UnauthorizedException if password does not match', async () => {
+      const hashedPassword = await bcrypt.hash('correct-password', 10);
+      mockPrismaService.user.findUnique.mockResolvedValue({
+        id: 'user-1',
+        email: 'test@example.com',
+        password: hashedPassword,
+      });
 
-      const result = await service.validateUser('wrong@example.com', 'password123');
-
-      expect(result).toBeNull();
+      await expect(service.signIn('test@example.com', 'wrong-password')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
-    it('should return null if password is incorrect', async () => {
+    it('should return tokens if credentials are valid', async () => {
+      const password = 'correct-password';
+      const hashedPassword = await bcrypt.hash(password, 10);
       const mockUser = {
-        id: '1',
+        id: 'user-1',
         email: 'test@example.com',
-        password: await bcrypt.hash('password123', 10),
-      };
-
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
-
-      const result = await service.validateUser('test@example.com', 'wrongpassword');
-
-      expect(result).toBeNull();
-    });
-  });
-
-  describe('login', () => {
-    it('should return access token and user info', async () => {
-      const mockUser = {
-        id: '1',
-        email: 'test@example.com',
+        password: hashedPassword,
         userType: 'PET_OWNER',
       };
 
-      mockJwtService.sign.mockReturnValue('mock-jwt-token');
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+      mockJwtService.signAsync.mockResolvedValue('mock-token');
 
-      const result = await service.login(mockUser);
+      const result = await service.signIn('test@example.com', password);
 
-      expect(result).toHaveProperty('access_token', 'mock-jwt-token');
-      expect(result).toHaveProperty('user');
-      expect(result.user).toEqual(mockUser);
-      expect(jwtService.sign).toHaveBeenCalled();
+      expect(result).toHaveProperty('accessToken');
+      expect(result).toHaveProperty('refreshToken');
+      expect(result.user.email).toBe(mockUser.email);
+    });
+  });
+
+  describe('signUp', () => {
+    it('should throw ConflictException if email already exists', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue({ id: 'existing' });
+
+      await expect(
+        service.signUp({
+          email: 'test@example.com',
+          password: 'password',
+          userType: 'PET_OWNER' as any,
+        }),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('should create user and profile, and send OTP', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+      mockPrismaService.user.create.mockResolvedValue({
+        id: 'new-user',
+        email: 'new@example.com',
+        userType: 'PET_OWNER',
+      });
+
+      const dto = {
+        email: 'new@example.com',
+        password: 'password123',
+        userType: 'PET_OWNER' as any,
+        firstName: 'Test',
+        lastName: 'User',
+      };
+
+      const result = await service.signUp(dto);
+
+      expect(prisma.user.create).toHaveBeenCalled();
+      expect(prisma.petOwner.create).toHaveBeenCalled();
+      expect(otpService.sendOtp).toHaveBeenCalledWith('new@example.com');
+      expect(result.message).toContain('Verify your email');
     });
   });
 });

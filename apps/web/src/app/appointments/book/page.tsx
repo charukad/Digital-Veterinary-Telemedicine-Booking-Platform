@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import apiClient from '@/lib/api-client';
 import { useAuth } from '@/contexts/AuthContext';
+import { appointmentSchema } from '@vetcare/validations';
+import { AppointmentType } from '@vetcare/types';
 
 interface Pet {
   id: string;
@@ -19,12 +21,14 @@ export default function BookAppointmentPage() {
 
   const [pets, setPets] = useState<Pet[]>([]);
   const [selectedPet, setSelectedPet] = useState('');
-  const [appointmentType, setAppointmentType] = useState('IN_CLINIC');
+  const [appointmentType, setAppointmentType] = useState<AppointmentType>(AppointmentType.IN_CLINIC);
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
   const [symptoms, setSymptoms] = useState('');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [availabilityMessage, setAvailabilityMessage] = useState({ text: '', type: '' });
   const [error, setError] = useState('');
 
   const vetId = searchParams.get('vetId');
@@ -36,6 +40,40 @@ export default function BookAppointmentPage() {
       fetchPets();
     }
   }, [authLoading, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (scheduledDate && scheduledTime && vetId) {
+      const checkSlotAvailability = async () => {
+        setAvailabilityLoading(true);
+        setAvailabilityMessage({ text: '', type: '' });
+        try {
+          const response = await apiClient.get('/appointments/check-availability', {
+            params: {
+              vetId,
+              date: scheduledDate,
+              startTime: scheduledTime,
+            },
+          });
+
+          if (response.data.available) {
+            setAvailabilityMessage({ text: 'Time slot is available!', type: 'success' });
+          } else {
+            setAvailabilityMessage({ 
+              text: response.data.reason || 'This time slot is not available.', 
+              type: 'error' 
+            });
+          }
+        } catch (err) {
+          console.error('Failed to check availability:', err);
+        } finally {
+          setAvailabilityLoading(false);
+        }
+      };
+
+      const timeoutId = setTimeout(checkSlotAvailability, 500);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [scheduledDate, scheduledTime, vetId]);
 
   const fetchPets = async () => {
     try {
@@ -57,13 +95,23 @@ export default function BookAppointmentPage() {
       return;
     }
 
-    if (!selectedPet) {
-      setError('Please select a pet');
+    if (availabilityMessage.type === 'error') {
+      setError('Please select an available time slot');
       return;
     }
 
-    if (!scheduledDate || !scheduledTime) {
-      setError('Please select date and time');
+    // Validate with Zod
+    const validationResult = appointmentSchema.safeParse({
+      petId: selectedPet,
+      veterinarianId: vetId,
+      type: appointmentType,
+      scheduledAt: new Date(`${scheduledDate}T${scheduledTime}`),
+      symptoms,
+      notes,
+    });
+
+    if (!validationResult.success) {
+      setError(validationResult.error.errors[0].message);
       return;
     }
 
@@ -71,17 +119,7 @@ export default function BookAppointmentPage() {
     setLoading(true);
 
     try {
-      const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`).toISOString();
-
-      await apiClient.post('/appointments', {
-        petId: selectedPet,
-        veterinarianId: vetId,
-        type: appointmentType,
-        scheduledAt,
-        symptoms,
-        notes,
-      });
-
+      await apiClient.post('/appointments', validationResult.data);
       router.push('/appointments');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to book appointment');
@@ -172,14 +210,14 @@ export default function BookAppointmentPage() {
               </label>
               <select
                 value={appointmentType}
-                onChange={(e) => setAppointmentType(e.target.value)}
+                onChange={(e) => setAppointmentType(e.target.value as AppointmentType)}
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
               >
-                <option value="IN_CLINIC">In-Clinic Visit</option>
-                <option value="HOME_VISIT">Home Visit</option>
-                <option value="TELEMEDICINE">Telemedicine (Online)</option>
-                <option value="EMERGENCY">Emergency</option>
+                <option value={AppointmentType.IN_CLINIC}>In-Clinic Visit</option>
+                <option value={AppointmentType.HOME_VISIT}>Home Visit</option>
+                <option value={AppointmentType.TELEMEDICINE}>Telemedicine (Online)</option>
+                <option value={AppointmentType.EMERGENCY}>Emergency</option>
               </select>
             </div>
 
@@ -213,6 +251,18 @@ export default function BookAppointmentPage() {
               </div>
             </div>
 
+            {/* Availability Feedback */}
+            {availabilityLoading && (
+              <p className="text-sm text-gray-500 animate-pulse">Checking availability...</p>
+            )}
+            {availabilityMessage.text && (
+              <p className={`text-sm font-medium ${
+                availabilityMessage.type === 'success' ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {availabilityMessage.text}
+              </p>
+            )}
+
             {/* Symptoms */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -245,7 +295,7 @@ export default function BookAppointmentPage() {
             <div className="flex gap-4 pt-4">
               <button
                 type="submit"
-                disabled={loading || pets.length === 0}
+                disabled={loading || availabilityLoading || pets.length === 0 || availabilityMessage.type === 'error'}
                 className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium"
               >
                 {loading ? 'Booking...' : 'Book Appointment'}
