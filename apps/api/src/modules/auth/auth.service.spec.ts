@@ -30,7 +30,7 @@ describe('AuthService', () => {
   };
 
   const mockOtpService = {
-    sendOtp: jest.fn(),
+    createEmailVerificationOtp: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -53,11 +53,11 @@ describe('AuthService', () => {
     jest.clearAllMocks();
   });
 
-  describe('signIn', () => {
+  describe('login', () => {
     it('should throw UnauthorizedException if user not found', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(null);
 
-      await expect(service.signIn('test@example.com', 'password')).rejects.toThrow(
+      await expect(service.login({ email: 'test@example.com', password: 'password' })).rejects.toThrow(
         UnauthorizedException,
       );
     });
@@ -67,10 +67,11 @@ describe('AuthService', () => {
       mockPrismaService.user.findUnique.mockResolvedValue({
         id: 'user-1',
         email: 'test@example.com',
-        password: hashedPassword,
+        passwordHash: hashedPassword,
+        status: 'ACTIVE',
       });
 
-      await expect(service.signIn('test@example.com', 'wrong-password')).rejects.toThrow(
+      await expect(service.login({ email: 'test@example.com', password: 'wrong-password' })).rejects.toThrow(
         UnauthorizedException,
       );
     });
@@ -81,14 +82,15 @@ describe('AuthService', () => {
       const mockUser = {
         id: 'user-1',
         email: 'test@example.com',
-        password: hashedPassword,
+        passwordHash: hashedPassword,
         userType: 'PET_OWNER',
+        status: 'ACTIVE',
       };
 
       mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
       mockJwtService.signAsync.mockResolvedValue('mock-token');
 
-      const result = await service.signIn('test@example.com', password);
+      const result = await service.login({ email: 'test@example.com', password });
 
       expect(result).toHaveProperty('accessToken');
       expect(result).toHaveProperty('refreshToken');
@@ -96,26 +98,32 @@ describe('AuthService', () => {
     });
   });
 
-  describe('signUp', () => {
+  describe('register', () => {
     it('should throw ConflictException if email already exists', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue({ id: 'existing' });
 
       await expect(
-        service.signUp({
+        service.register({
           email: 'test@example.com',
           password: 'password',
           userType: 'PET_OWNER' as any,
+          firstName: 'Test',
+          lastName: 'User',
+          phone: '1234567890',
         }),
       ).rejects.toThrow(ConflictException);
     });
 
     it('should create user and profile, and send OTP', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(null);
-      mockPrismaService.user.create.mockResolvedValue({
+      const mockUser = {
         id: 'new-user',
         email: 'new@example.com',
         userType: 'PET_OWNER',
-      });
+        status: 'PENDING_VERIFICATION',
+      };
+      mockPrismaService.user.create.mockResolvedValue(mockUser);
+      mockJwtService.signAsync.mockResolvedValue('mock-token');
 
       const dto = {
         email: 'new@example.com',
@@ -123,14 +131,15 @@ describe('AuthService', () => {
         userType: 'PET_OWNER' as any,
         firstName: 'Test',
         lastName: 'User',
+        phone: '1234567890',
       };
 
-      const result = await service.signUp(dto);
+      const result = await service.register(dto);
 
       expect(prisma.user.create).toHaveBeenCalled();
       expect(prisma.petOwner.create).toHaveBeenCalled();
-      expect(otpService.sendOtp).toHaveBeenCalledWith('new@example.com');
-      expect(result.message).toContain('Verify your email');
+      expect(otpService.createEmailVerificationOtp).toHaveBeenCalledWith(mockUser.id, mockUser.email);
+      expect(result.message).toContain('verification code');
     });
   });
 });

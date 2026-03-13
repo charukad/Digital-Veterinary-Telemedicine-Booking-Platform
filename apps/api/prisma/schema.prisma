@@ -107,6 +107,8 @@ model User {
   id            String     @id @default(uuid())
   email         String     @unique
   phone         String?    @unique
+  firstName     String?    @map("first_name")
+  lastName      String?    @map("last_name")
   passwordHash  String     @map("password_hash")
   userType      UserType   @map("user_type")
   status        UserStatus @default(PENDING_VERIFICATION)
@@ -238,6 +240,7 @@ model Clinic {
   name                String
   registrationNumber  String?  @unique @map("registration_number")
   address             String   @db.Text
+  city                String?
   latitude            Decimal? @db.Decimal(10, 8)
   longitude           Decimal? @db.Decimal(11, 8)
   phone               String

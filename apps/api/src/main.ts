@@ -18,6 +18,7 @@ async function bootstrap() {
       process.env.FRONTEND_URL || 'http://localhost:3000',
       'http://localhost:3001', // Admin panel
       'http://localhost:3002', // Mobile dev server
+      'http://localhost:3037', // Docker web container
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { EmailService } from '../notifications/email.service';
 
 @Injectable()

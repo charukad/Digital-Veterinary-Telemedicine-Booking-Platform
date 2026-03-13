@@ -1,6 +1,47 @@
 version: '3.8'
 
 services:
+  # NestJS Backend API
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: vetcare-api
+    restart: unless-stopped
+    ports:
+      - '8085:8000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - vetcare-network
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://vetcare_user:vetcare_password@postgres:5432/vetcare_db?schema=public
+      - REDIS_URL=redis://redis:6379
+      - PORT=8000
+    command: [ "pnpm", "--filter", "vetcare-api", "exec", "ts-node", "-r", "tsconfig-paths/register", "-T", "src/main.ts" ]
+
+  # Next.js Frontend Web App
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: vetcare-web
+    restart: unless-stopped
+    ports:
+      - '3037:3000'
+    depends_on:
+      - api
+    networks:
+      - vetcare-network
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8085/api/v1
+      - NEXT_PUBLIC_WS_URL=http://localhost:8085
+
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
@@ -17,7 +58,7 @@ services:
     networks:
       - vetcare-network
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U vetcare_user -d vetcare_db']
+      test: [ 'CMD-SHELL', 'pg_isready -U vetcare_user -d vetcare_db' ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -28,14 +69,14 @@ services:
     container_name: vetcare-redis
     restart: unless-stopped
     ports:
-      - '6379:6379'
+      - '6381:6379'
     volumes:
       - redis_data:/data
     networks:
       - vetcare-network
     command: redis-server --appendonly yes
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test: [ 'CMD', 'redis-cli', 'ping' ]
       interval: 10s
       timeout: 5s
       retries: 5

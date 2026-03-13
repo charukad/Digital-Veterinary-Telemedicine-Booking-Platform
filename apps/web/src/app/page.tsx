@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import apiClient from '@/lib/apiClient';
+import apiClient from '@/lib/api-client';
 
 interface Veterinarian {
   id: string;

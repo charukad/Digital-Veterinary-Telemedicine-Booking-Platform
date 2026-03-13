@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AppointmentStatus } from '@prisma/client';
 
-interface MonthlyStats {
+export interface MonthlyStats {
   month: string;
   year: number;
   total: number;
@@ -12,7 +12,7 @@ interface MonthlyStats {
 
 @Injectable()
 export class AppointmentStatisticsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async getVetStatistics(vetId: string) {
     // Verify vet exists
@@ -97,12 +97,12 @@ export class AppointmentStatisticsService {
     const appointments = await this.prisma.appointment.findMany({
       where: {
         veterinarianId: vetId,
-        appointmentDate: {
+        scheduledAt: {
           gte: sixMonthsAgo,
         },
       },
       select: {
-        appointmentDate: true,
+        scheduledAt: true,
         status: true,
       },
     });
@@ -111,7 +111,7 @@ export class AppointmentStatisticsService {
     const monthlyData = new Map<string, MonthlyStats>();
 
     appointments.forEach((apt) => {
-      const date = new Date(apt.appointmentDate);
+      const date = new Date(apt.scheduledAt);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
       if (!monthlyData.has(monthKey)) {
@@ -149,9 +149,9 @@ export class AppointmentStatisticsService {
       include: {
         veterinarian: {
           select: {
-            clinicFee: true,
-            homeFee: true,
-            onlineFee: true,
+            consultationFeeClinic: true,
+            consultationFeeHome: true,
+            consultationFeeOnline: true,
           },
         },
       },
@@ -167,15 +167,15 @@ export class AppointmentStatisticsService {
 
       // Note: In a real system, the actual fee charged would be in the appointment
       // For now, we'll use the vet's current fees as an estimate
-      switch (apt.appointmentType) {
-        case 'CLINIC':
-          clinicRevenue += vet.clinicFee || 0;
+      switch (apt.type) {
+        case 'IN_CLINIC':
+          clinicRevenue += Number(vet.consultationFeeClinic) || 0;
           break;
         case 'HOME_VISIT':
-          homeRevenue += vet.homeFee || 0;
+          homeRevenue += Number(vet.consultationFeeHome) || 0;
           break;
-        case 'ONLINE':
-          onlineRevenue += vet.onlineFee || 0;
+        case 'TELEMEDICINE':
+          onlineRevenue += Number(vet.consultationFeeOnline) || 0;
           break;
       }
     });
@@ -199,7 +199,7 @@ export class AppointmentStatisticsService {
     const recentAppointments = await this.prisma.appointment.count({
       where: {
         veterinarianId: vetId,
-        appointmentDate: {
+        scheduledAt: {
           gte: thirtyDaysAgo,
         },
       },

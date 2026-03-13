@@ -9,7 +9,7 @@ import {
   IsDateString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { PartialType } from '@nestjs/mapped-types';
+import { PartialType } from '@nestjs/swagger';
 
 export class TreatmentStepDto {
   @IsString()
@@ -86,4 +86,4 @@ export class CreateTreatmentPlanDto {
   notes?: string;
 }
 
-export class UpdateTreatmentPlanDto extends PartialType(CreateTreatmentPlanDto) {}
+export class UpdateTreatmentPlanDto extends PartialType(CreateTreatmentPlanDto) { }

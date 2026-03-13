@@ -25,6 +25,9 @@ describe('AppointmentsService', () => {
     petOwner: {
       findUnique: jest.fn(),
     },
+    user: {
+      findUnique: jest.fn(),
+    },
     availabilitySlot: {
       findMany: jest.fn(),
     },
@@ -32,6 +35,7 @@ describe('AppointmentsService', () => {
 
   const mockEmailService = {
     sendStatusUpdate: jest.fn(),
+    sendBookingConfirmation: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -66,8 +70,10 @@ describe('AppointmentsService', () => {
       const userId = 'user-1';
       const dto = { petId: 'pet-1', veterinarianId: 'vet-1', scheduledAt: new Date(), type: 'IN_CLINIC' as any };
       
-      mockPrismaService.petOwner.findUnique.mockResolvedValue({ id: 'owner-1', userId });
-      mockPrismaService.pet.findUnique.mockResolvedValue({ id: 'pet-1', ownerId: 'owner-1' });
+      mockPrismaService.petOwner.findUnique.mockResolvedValue({ id: 'owner-1', userId, firstName: 'John', lastName: 'Doe' });
+      mockPrismaService.pet.findUnique.mockResolvedValue({ id: 'pet-1', ownerId: 'owner-1', name: 'Buddy' });
+      mockPrismaService.veterinarian.findUnique.mockResolvedValue({ id: 'vet-1', firstName: 'Dr.', lastName: 'Smith' });
+      mockPrismaService.user.findUnique.mockResolvedValue({ email: 'owner@example.com' });
       mockPrismaService.appointment.findFirst.mockResolvedValue(null);
       mockPrismaService.appointment.create.mockResolvedValue({ id: 'apt-1', ...dto });
 

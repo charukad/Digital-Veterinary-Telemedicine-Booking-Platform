@@ -5,7 +5,7 @@ import { CreateAvailabilitySlotDto, UpdateAvailabilitySlotDto } from './dto/avai
 
 @Injectable()
 export class VeterinariansService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async getProfile(userId: string) {
     const veterinarian = await this.prisma.veterinarian.findUnique({
@@ -16,6 +16,8 @@ export class VeterinariansService {
             email: true,
             phone: true,
             status: true,
+            firstName: true,
+            lastName: true,
           },
         },
         qualifications: true,
@@ -182,6 +184,8 @@ export class VeterinariansService {
           select: {
             email: true,
             phone: true,
+            firstName: true,
+            lastName: true,
           },
         },
         specializations: true,
@@ -236,6 +240,8 @@ export class VeterinariansService {
           select: {
             email: true,
             status: true,
+            firstName: true,
+            lastName: true,
           },
         },
         specializations: true,
@@ -267,6 +273,8 @@ export class VeterinariansService {
           select: {
             email: true,
             phone: true,
+            firstName: true,
+            lastName: true,
           },
         },
         qualifications: true,
