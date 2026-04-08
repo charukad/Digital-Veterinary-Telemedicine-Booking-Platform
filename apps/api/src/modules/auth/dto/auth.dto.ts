@@ -1,5 +1,5 @@
 import { IsEmail, IsString, MinLength, IsEnum, IsOptional, Matches } from 'class-validator';
-import { UserType } from '@prisma/client';
+import { UserType } from '@vetcare/types';
 
 export class RegisterDto {
   @IsEmail()

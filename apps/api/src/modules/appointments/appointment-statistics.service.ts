@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { AppointmentStatus } from '@vetcare/types';
 import { PrismaService } from '../../prisma/prisma.service';
-import { AppointmentStatus } from '@prisma/client';
 
 export interface MonthlyStats {
   month: string;

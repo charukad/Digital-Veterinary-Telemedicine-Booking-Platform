@@ -7,7 +7,7 @@ import {
   IsArray,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { Species, Gender } from '@prisma/client';
+import { Species, Gender } from '@vetcare/types';
 
 export class CreatePetDto {
   @IsString()

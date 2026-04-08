@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
+import { AppointmentStatus } from '@vetcare/types';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateAppointmentDto, UpdateAppointmentDto } from './dto/appointment.dto';
 import { EmailService } from '../notifications/email.service';
@@ -334,7 +335,7 @@ export class AppointmentsService {
   }
 
   async cancel(id: string, userId: string) {
-    return this.update(id, userId, { status: 'CANCELLED' });
+    return this.update(id, userId, { status: AppointmentStatus.CANCELLED });
   }
 
   async checkAvailability(vetId: string, date: string, startTime: string) {

@@ -6,7 +6,7 @@ import {
   IsInt,
   Min,
 } from 'class-validator';
-import { AppointmentType, AppointmentStatus } from '@prisma/client';
+import { AppointmentType, AppointmentStatus } from '@vetcare/types';
 
 export class CreateAppointmentDto {
   @IsString()
