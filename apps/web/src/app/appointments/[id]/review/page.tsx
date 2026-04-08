@@ -142,7 +142,7 @@ export default function WriteReviewPage() {
                     </svg>
                   </button>
                 ))}
-                dium text-gray-600 ml-4">
+                <span className="text-sm font-medium text-gray-600 ml-4">
                   {rating === 0 && '(Click to rate)'}
                   {rating === 1 && 'Poor'}
                   {rating === 2 && 'Fair'}
