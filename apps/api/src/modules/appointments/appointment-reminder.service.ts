@@ -91,9 +91,10 @@ export class AppointmentReminderService {
       ownerName,
       petName,
       vetName,
-      date: appointment.scheduledAt,
+      appointmentDate: appointment.scheduledAt.toLocaleDateString(),
+      appointmentTime: appointment.scheduledAt.toLocaleTimeString(),
       clinicName: appointment.clinic?.name || 'VetCare Clinic',
-      location: appointment.type === 'TELEMEDICINE' ? 'Online (Video Consultation)' : (appointment.clinic?.address || 'Clinic Address'),
+      clinicAddress: appointment.type === 'TELEMEDICINE' ? 'Online (Video Consultation)' : (appointment.clinic?.address || 'Clinic Address'),
     });
 
     this.logger.log(`Reminder sent to ${user.email} for appointment ${appointment.id}`);

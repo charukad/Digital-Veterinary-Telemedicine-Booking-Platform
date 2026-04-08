@@ -57,10 +57,9 @@ export class OtpService {
     });
 
     // Send OTP email
-    await this.emailService.sendMail({
+    await this.emailService.sendEmail({
       to: email,
       subject: 'VetCare - Email Verification Code',
-      text: `Your verification code is: ${code}\n\nThis code will expire in 5 minutes.\n\nIf you didn't request this code, please ignore this email.`,
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px;">
           <h2>Email Verification</h2>
@@ -182,10 +181,9 @@ export class OtpService {
       },
     });
 
-    await this.emailService.sendMail({
+    await this.emailService.sendEmail({
       to: email,
       subject: 'VetCare - Password Reset Code',
-      text: `Your password reset code is: ${code}\n\nThis code will expire in 15 minutes.\n\nIf you didn't request this, please ignore this email.`,
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px;">
           <h2>Password Reset Request</h2>

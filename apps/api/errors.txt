@@ -1,0 +1,145 @@
+src/modules/addresses/addresses.service.ts(33,9): error TS2353: Object literal may only specify known properties, and 'province' does not exist in type 'Without<AddressCreateInput, AddressUncheckedCreateInput> & AddressUncheckedCreateInput'.
+src/modules/addresses/addresses.service.ts(120,9): error TS2353: Object literal may only specify known properties, and 'province' does not exist in type '(Without<AddressUpdateInput, AddressUncheckedUpdateInput> & AddressUncheckedUpdateInput) | (Without<...> & AddressUpdateInput)'.
+src/modules/admin/admin-user-management.service.ts(62,15): error TS2353: Object literal may only specify known properties, and 'verificationStatus' does not exist in type 'VeterinarianSelect<DefaultArgs>'.
+src/modules/admin/admin-user-management.service.ts(159,9): error TS2322: Type 'string' is not assignable to type 'UserStatus | EnumUserStatusFieldUpdateOperationsInput | undefined'.
+src/modules/admin/admin-user-management.service.ts(187,41): error TS2322: Type '"ADMIN"' is not assignable to type 'UserType | EnumUserTypeFilter<"User"> | undefined'.
+src/modules/admin/admin-user-management.service.ts(226,9): error TS2322: Type '"DELETED"' is not assignable to type 'UserStatus | EnumUserStatusFieldUpdateOperationsInput | undefined'.
+src/modules/appointment-notes/appointment-notes.service.ts(44,24): error TS2551: Property 'appointmentNote' does not exist on type 'PrismaService'. Did you mean 'appointment'?
+src/modules/appointment-notes/appointment-notes.service.ts(97,24): error TS2551: Property 'appointmentNote' does not exist on type 'PrismaService'. Did you mean 'appointment'?
+src/modules/appointment-notes/appointment-notes.service.ts(114,36): error TS2551: Property 'appointmentNote' does not exist on type 'PrismaService'. Did you mean 'appointment'?
+src/modules/appointment-notes/appointment-notes.service.ts(127,24): error TS2551: Property 'appointmentNote' does not exist on type 'PrismaService'. Did you mean 'appointment'?
+src/modules/appointment-notes/appointment-notes.service.ts(138,36): error TS2551: Property 'appointmentNote' does not exist on type 'PrismaService'. Did you mean 'appointment'?
+src/modules/appointment-notes/appointment-notes.service.ts(150,23): error TS2551: Property 'appointmentNote' does not exist on type 'PrismaService'. Did you mean 'appointment'?
+src/modules/appointments/appointments.service.ts(112,31): error TS2339: Property 'firstName' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; userId: string; profileImage: string | null; licenseNumber: string; bio: string | null; yearsOfExperience: number | null; consultationFeeClinic: Decimal; ... 4 more ...; reviewCount: number; }'.
+src/modules/appointments/appointments.service.ts(112,54): error TS2339: Property 'lastName' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; userId: string; profileImage: string | null; licenseNumber: string; bio: string | null; yearsOfExperience: number | null; consultationFeeClinic: Decimal; ... 4 more ...; reviewCount: number; }'.
+src/modules/appointments/appointments.service.ts(326,48): error TS2339: Property 'firstName' does not exist on type '{ user: { email: string; }; } & { id: string; createdAt: Date; updatedAt: Date; userId: string; profileImage: string | null; licenseNumber: string; bio: string | null; yearsOfExperience: number | null; ... 5 more ...; reviewCount: number; }'.
+src/modules/appointments/appointments.service.ts(326,88): error TS2339: Property 'lastName' does not exist on type '{ user: { email: string; }; } & { id: string; createdAt: Date; updatedAt: Date; userId: string; profileImage: string | null; licenseNumber: string; bio: string | null; yearsOfExperience: number | null; ... 5 more ...; reviewCount: number; }'.
+src/modules/clinics/clinics.service.ts(29,9): error TS2353: Object literal may only specify known properties, and 'description' does not exist in type '(Without<ClinicCreateInput, ClinicUncheckedCreateInput> & ClinicUncheckedCreateInput) | (Without<...> & ClinicCreateInput)'.
+src/modules/clinics/clinics.service.ts(52,9): error TS2353: Object literal may only specify known properties, and 'owner' does not exist in type 'ClinicInclude<DefaultArgs>'.
+src/modules/clinics/clinics.service.ts(88,13): error TS2353: Object literal may only specify known properties, and 'user' does not exist in type 'ClinicVeterinarianSelect<DefaultArgs>'.
+src/modules/clinics/clinics.service.ts(125,16): error TS2339: Property 'ownerId' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; email: string | null; phone: string; status: UserStatus; name: string; registrationNumber: string | null; address: string; ... 4 more ...; facilities: string[]; }'.
+src/modules/clinics/clinics.service.ts(140,9): error TS2353: Object literal may only specify known properties, and 'description' does not exist in type '(Without<ClinicUpdateInput, ClinicUncheckedUpdateInput> & ClinicUncheckedUpdateInput) | (Without<...> & ClinicUpdateInput)'.
+src/modules/clinics/clinics.service.ts(162,16): error TS2339: Property 'ownerId' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; email: string | null; phone: string; status: UserStatus; name: string; registrationNumber: string | null; address: string; ... 4 more ...; facilities: string[]; }'.
+src/modules/clinics/clinics.service.ts(183,16): error TS2353: Object literal may only specify known properties, and 'ownerId' does not exist in type 'ClinicWhereInput'.
+src/modules/emergency-contacts/emergency-contacts.service.ts(22,24): error TS2339: Property 'emergencyContact' does not exist on type 'PrismaService'.
+src/modules/emergency-contacts/emergency-contacts.service.ts(43,24): error TS2339: Property 'emergencyContact' does not exist on type 'PrismaService'.
+src/modules/emergency-contacts/emergency-contacts.service.ts(58,39): error TS2339: Property 'emergencyContact' does not exist on type 'PrismaService'.
+src/modules/emergency-contacts/emergency-contacts.service.ts(82,39): error TS2339: Property 'emergencyContact' does not exist on type 'PrismaService'.
+src/modules/emergency-contacts/emergency-contacts.service.ts(94,24): error TS2339: Property 'emergencyContact' does not exist on type 'PrismaService'.
+src/modules/emergency-contacts/emergency-contacts.service.ts(109,39): error TS2339: Property 'emergencyContact' does not exist on type 'PrismaService'.
+src/modules/emergency-contacts/emergency-contacts.service.ts(121,23): error TS2339: Property 'emergencyContact' does not exist on type 'PrismaService'.
+src/modules/lab-results/lab-results.service.ts(18,9): error TS2353: Object literal may only specify known properties, and 'veterinarian' does not exist in type 'HealthRecordInclude<DefaultArgs>'.
+src/modules/lab-results/lab-results.service.ts(22,10): error TS2552: Cannot find name 'medicalRecord'. Did you mean 'MediaRecorder'?
+src/modules/lab-results/lab-results.service.ts(26,9): error TS2552: Cannot find name 'medicalRecord'. Did you mean 'MediaRecorder'?
+src/modules/lab-results/lab-results.service.ts(32,24): error TS2339: Property 'labResult' does not exist on type 'PrismaService'.
+src/modules/lab-results/lab-results.service.ts(66,9): error TS2353: Object literal may only specify known properties, and 'veterinarian' does not exist in type 'HealthRecordInclude<DefaultArgs>'.
+src/modules/lab-results/lab-results.service.ts(70,10): error TS2552: Cannot find name 'medicalRecord'. Did you mean 'medicalRecordId'?
+src/modules/lab-results/lab-results.service.ts(75,19): error TS2552: Cannot find name 'medicalRecord'. Did you mean 'medicalRecordId'?
+src/modules/lab-results/lab-results.service.ts(76,21): error TS2552: Cannot find name 'medicalRecord'. Did you mean 'medicalRecordId'?
+src/modules/lab-results/lab-results.service.ts(82,24): error TS2339: Property 'labResult' does not exist on type 'PrismaService'.
+src/modules/lab-results/lab-results.service.ts(89,41): error TS2339: Property 'labResult' does not exist on type 'PrismaService'.
+src/modules/lab-results/lab-results.service.ts(121,41): error TS2339: Property 'labResult' does not exist on type 'PrismaService'.
+src/modules/lab-results/lab-results.service.ts(143,24): error TS2339: Property 'labResult' does not exist on type 'PrismaService'.
+src/modules/lab-results/lab-results.service.ts(156,41): error TS2339: Property 'labResult' does not exist on type 'PrismaService'.
+src/modules/lab-results/lab-results.service.ts(178,23): error TS2339: Property 'labResult' does not exist on type 'PrismaService'.
+src/modules/medical-records/medical-records.service.ts(33,9): error TS2353: Object literal may only specify known properties, and 'appointmentId' does not exist in type 'Without<HealthRecordCreateInput, HealthRecordUncheckedCreateInput> & HealthRecordUncheckedCreateInput'.
+src/modules/medical-records/medical-records.service.ts(49,9): error TS2353: Object literal may only specify known properties, and 'veterinarian' does not exist in type 'HealthRecordInclude<DefaultArgs>'.
+src/modules/medical-records/medical-records.service.ts(109,9): error TS2353: Object literal may only specify known properties, and 'veterinarian' does not exist in type 'HealthRecordInclude<DefaultArgs>'.
+src/modules/medical-records/medical-records.service.ts(157,9): error TS2353: Object literal may only specify known properties, and 'veterinarian' does not exist in type 'HealthRecordInclude<DefaultArgs>'.
+src/modules/medical-records/medical-records.service.ts(236,9): error TS2353: Object literal may only specify known properties, and 'diagnosis' does not exist in type '(Without<HealthRecordUpdateInput, HealthRecordUncheckedUpdateInput> & HealthRecordUncheckedUpdateInput) | (Without<...> & HealthRecordUpdateInput)'.
+src/modules/medical-records/medical-records.service.ts(252,9): error TS2353: Object literal may only specify known properties, and 'veterinarian' does not exist in type 'HealthRecordInclude<DefaultArgs>'.
+src/modules/medical-records/medical-records.service.ts(315,9): error TS2353: Object literal may only specify known properties, and 'veterinarian' does not exist in type 'HealthRecordInclude<DefaultArgs>'.
+src/modules/notifications/notification-preferences.service.ts(12,41): error TS2339: Property 'notificationPreference' does not exist on type 'PrismaService'.
+src/modules/notifications/notification-preferences.service.ts(18,39): error TS2339: Property 'notificationPreference' does not exist on type 'PrismaService'.
+src/modules/notifications/notification-preferences.service.ts(39,43): error TS2339: Property 'notificationPreference' does not exist on type 'PrismaService'.
+src/modules/payments/payments.service.ts(88,9): error TS2353: Object literal may only specify known properties, and 'method' does not exist in type 'Without<PaymentCreateInput, PaymentUncheckedCreateInput> & PaymentUncheckedCreateInput'.
+src/modules/payments/payments.service.ts(116,34): error TS2339: Property 'address' does not exist on type '{ user: { id: string; status: UserStatus; createdAt: Date; updatedAt: Date; firstName: string | null; lastName: string | null; profileImage: string | null; email: string; ... 5 more ...; refreshToken: string | null; }; } & { ...; }'.
+src/modules/payments/payments.service.ts(117,31): error TS2339: Property 'city' does not exist on type '{ user: { id: string; status: UserStatus; createdAt: Date; updatedAt: Date; firstName: string | null; lastName: string | null; profileImage: string | null; email: string; ... 5 more ...; refreshToken: string | null; }; } & { ...; }'.
+src/modules/payments/payments.service.ts(204,9): error TS2353: Object literal may only specify known properties, and 'paymentData' does not exist in type '(Without<PaymentUpdateInput, PaymentUncheckedUpdateInput> & PaymentUncheckedUpdateInput) | (Without<...> & PaymentUpdateInput)'.
+src/modules/payments/payments.service.ts(205,24): error TS2339: Property 'paymentData' does not exist on type '{ appointment: { pet: { id: string; createdAt: Date; updatedAt: Date; ownerId: string; profileImage: string | null; name: string; microchipId: string | null; species: Species; ... 7 more ...; currentMedications: string | null; }; veterinarian: { ...; }; owner: { ...; } & { ...; }; } & { ...; }; } & { ...; }'.
+src/modules/pet-insurance/pet-insurance.service.ts(31,24): error TS2339: Property 'petInsurance' does not exist on type 'PrismaService'.
+src/modules/pet-insurance/pet-insurance.service.ts(71,24): error TS2339: Property 'petInsurance' does not exist on type 'PrismaService'.
+src/modules/pet-insurance/pet-insurance.service.ts(78,41): error TS2339: Property 'petInsurance' does not exist on type 'PrismaService'.
+src/modules/pet-insurance/pet-insurance.service.ts(101,41): error TS2339: Property 'petInsurance' does not exist on type 'PrismaService'.
+src/modules/pet-insurance/pet-insurance.service.ts(135,24): error TS2339: Property 'petInsurance' does not exist on type 'PrismaService'.
+src/modules/pet-insurance/pet-insurance.service.ts(142,41): error TS2339: Property 'petInsurance' does not exist on type 'PrismaService'.
+src/modules/pet-insurance/pet-insurance.service.ts(159,24): error TS2339: Property 'petInsurance' does not exist on type 'PrismaService'.
+src/modules/pet-insurance/pet-insurance.service.ts(166,41): error TS2339: Property 'petInsurance' does not exist on type 'PrismaService'.
+src/modules/pet-insurance/pet-insurance.service.ts(183,23): error TS2339: Property 'petInsurance' does not exist on type 'PrismaService'.
+src/modules/pets/owner-dashboard.service.ts(73,9): error TS2353: Object literal may only specify known properties, and 'medicalRecords' does not exist in type 'PetSelect<DefaultArgs>'.
+src/modules/pets/pets.service.ts(21,7): error TS2322: Type '{ ownerId: string; name: string; species: Species; breed: string; gender?: Gender; dateOfBirth: Date; weight?: number; color?: string; microchipId?: string; ... 4 more ...; currentMedications?: string[]; }' is not assignable to type '(Without<PetCreateInput, PetUncheckedCreateInput> & PetUncheckedCreateInput) | (Without<PetUncheckedCreateInput, PetCreateInput> & PetCreateInput)'.
+  Type '{ ownerId: string; name: string; species: Species; breed: string; gender?: Gender; dateOfBirth: Date; weight?: number; color?: string; microchipId?: string; ... 4 more ...; currentMedications?: string[]; }' is not assignable to type 'Without<PetCreateInput, PetUncheckedCreateInput> & PetUncheckedCreateInput'.
+    Type '{ ownerId: string; name: string; species: Species; breed: string; gender?: Gender; dateOfBirth: Date; weight?: number; color?: string; microchipId?: string; ... 4 more ...; currentMedications?: string[]; }' is not assignable to type 'PetUncheckedCreateInput'.
+      Types of property 'allergies' are incompatible.
+        Type 'string[] | undefined' is not assignable to type 'string | null | undefined'.
+          Type 'string[]' is not assignable to type 'string'.
+src/modules/pets/pets.service.ts(68,22): error TS2353: Object literal may only specify known properties, and 'date' does not exist in type 'VaccinationOrderByWithRelationInput | VaccinationOrderByWithRelationInput[]'.
+src/modules/pets/pets.service.ts(111,7): error TS2322: Type 'UpdatePetDto' is not assignable to type '(Without<PetUpdateInput, PetUncheckedUpdateInput> & PetUncheckedUpdateInput) | (Without<PetUncheckedUpdateInput, PetUpdateInput> & PetUpdateInput)'.
+  Type 'UpdatePetDto' is not assignable to type 'Without<PetUncheckedUpdateInput, PetUpdateInput> & PetUpdateInput'.
+    Types of property 'allergies' are incompatible.
+      Type 'string[] | undefined' is not assignable to type 'string | NullableStringFieldUpdateOperationsInput | null | undefined'.
+        Type 'string[]' is not assignable to type 'string | NullableStringFieldUpdateOperationsInput | null | undefined'.
+src/modules/prescriptions/prescriptions.service.ts(18,9): error TS2353: Object literal may only specify known properties, and 'veterinarian' does not exist in type 'HealthRecordInclude<DefaultArgs>'.
+src/modules/prescriptions/prescriptions.service.ts(22,10): error TS2552: Cannot find name 'medicalRecord'. Did you mean 'MediaRecorder'?
+src/modules/prescriptions/prescriptions.service.ts(26,9): error TS2552: Cannot find name 'medicalRecord'. Did you mean 'MediaRecorder'?
+src/modules/prescriptions/prescriptions.service.ts(34,9): error TS2353: Object literal may only specify known properties, and 'medicalRecordId' does not exist in type '(Without<PrescriptionCreateInput, PrescriptionUncheckedCreateInput> & PrescriptionUncheckedCreateInput) | (Without<...> & PrescriptionCreateInput)'.
+src/modules/prescriptions/prescriptions.service.ts(43,9): error TS2353: Object literal may only specify known properties, and 'medicalRecord' does not exist in type 'PrescriptionInclude<DefaultArgs>'.
+src/modules/prescriptions/prescriptions.service.ts(79,9): error TS2353: Object literal may only specify known properties, and 'veterinarian' does not exist in type 'HealthRecordInclude<DefaultArgs>'.
+src/modules/prescriptions/prescriptions.service.ts(83,10): error TS2552: Cannot find name 'medicalRecord'. Did you mean 'medicalRecordId'?
+src/modules/prescriptions/prescriptions.service.ts(88,19): error TS2552: Cannot find name 'medicalRecord'. Did you mean 'medicalRecordId'?
+src/modules/prescriptions/prescriptions.service.ts(89,21): error TS2552: Cannot find name 'medicalRecord'. Did you mean 'medicalRecordId'?
+src/modules/prescriptions/prescriptions.service.ts(96,16): error TS2353: Object literal may only specify known properties, and 'medicalRecordId' does not exist in type 'PrescriptionWhereInput'.
+src/modules/prescriptions/prescriptions.service.ts(105,9): error TS2353: Object literal may only specify known properties, and 'medicalRecord' does not exist in type 'PrescriptionInclude<DefaultArgs>'.
+src/modules/prescriptions/prescriptions.service.ts(123,32): error TS2339: Property 'healthRecord' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; medications: JsonValue; instructions: string | null; validUntil: Date | null; signatureUrl: string | null; pdfUrl: string | null; consultationId: string; }'.
+src/modules/prescriptions/prescriptions.service.ts(124,34): error TS2339: Property 'healthRecord' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; medications: JsonValue; instructions: string | null; validUntil: Date | null; signatureUrl: string | null; pdfUrl: string | null; consultationId: string; }'.
+src/modules/prescriptions/prescriptions.service.ts(137,9): error TS2353: Object literal may only specify known properties, and 'medicalRecord' does not exist in type 'PrescriptionInclude<DefaultArgs>'.
+src/modules/prescriptions/prescriptions.service.ts(150,22): error TS2339: Property 'healthRecord' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; medications: JsonValue; instructions: string | null; validUntil: Date | null; signatureUrl: string | null; pdfUrl: string | null; consultationId: string; }'.
+src/modules/prescriptions/prescriptions.service.ts(159,9): error TS2561: Object literal may only specify known properties, but 'medicationName' does not exist in type '(Without<PrescriptionUpdateInput, PrescriptionUncheckedUpdateInput> & PrescriptionUncheckedUpdateInput) | (Without<...> & PrescriptionUpdateInput)'. Did you mean to write 'medications'?
+src/modules/prescriptions/prescriptions.service.ts(173,9): error TS2353: Object literal may only specify known properties, and 'medicalRecord' does not exist in type 'PrescriptionInclude<DefaultArgs>'.
+src/modules/prescriptions/prescriptions.service.ts(186,22): error TS2339: Property 'healthRecord' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; medications: JsonValue; instructions: string | null; validUntil: Date | null; signatureUrl: string | null; pdfUrl: string | null; consultationId: string; }'.
+src/modules/reviews/reviews.service.ts(190,9): error TS2353: Object literal may only specify known properties, and 'owner' does not exist in type 'ReviewInclude<DefaultArgs>'.
+src/modules/treatment-plans/treatment-plans.service.ts(32,24): error TS2339: Property 'treatmentPlan' does not exist on type 'PrismaService'.
+src/modules/treatment-plans/treatment-plans.service.ts(84,24): error TS2339: Property 'treatmentPlan' does not exist on type 'PrismaService'.
+src/modules/treatment-plans/treatment-plans.service.ts(104,36): error TS2339: Property 'treatmentPlan' does not exist on type 'PrismaService'.
+src/modules/treatment-plans/treatment-plans.service.ts(143,36): error TS2339: Property 'treatmentPlan' does not exist on type 'PrismaService'.
+src/modules/treatment-plans/treatment-plans.service.ts(177,24): error TS2339: Property 'treatmentPlan' does not exist on type 'PrismaService'.
+src/modules/treatment-plans/treatment-plans.service.ts(184,36): error TS2339: Property 'treatmentPlan' does not exist on type 'PrismaService'.
+src/modules/treatment-plans/treatment-plans.service.ts(198,24): error TS2339: Property 'treatmentPlan' does not exist on type 'PrismaService'.
+src/modules/treatment-plans/treatment-plans.service.ts(205,36): error TS2339: Property 'treatmentPlan' does not exist on type 'PrismaService'.
+src/modules/treatment-plans/treatment-plans.service.ts(219,23): error TS2339: Property 'treatmentPlan' does not exist on type 'PrismaService'.
+src/modules/users/users.service.ts(67,9): error TS2353: Object literal may only specify known properties, and 'emailAppointmentReminders' does not exist in type 'UserSelect<DefaultArgs>'.
+src/modules/users/users.service.ts(91,9): error TS2353: Object literal may only specify known properties, and 'emailAppointmentReminders' does not exist in type 'UserSelect<DefaultArgs>'.
+src/modules/vaccinations/vaccination-reminder.service.ts(45,10): error TS18047: 'vaccination.nextDueDate' is possibly 'null'.
+src/modules/vaccinations/vaccination-reminder.service.ts(58,45): error TS18047: 'vaccination.nextDueDate' is possibly 'null'.
+src/modules/vaccinations/vaccinations.service.ts(34,46): error TS2339: Property 'administeredDate' does not exist on type 'CreateVaccinationDto'.
+src/modules/vaccinations/vaccinations.service.ts(37,9): error TS2353: Object literal may only specify known properties, and 'manufacturer' does not exist in type 'Without<VaccinationCreateInput, VaccinationUncheckedCreateInput> & VaccinationUncheckedCreateInput'.
+src/modules/vaccinations/vaccinations.service.ts(48,9): error TS2353: Object literal may only specify known properties, and 'veterinarian' does not exist in type 'VaccinationInclude<DefaultArgs>'.
+src/modules/vaccinations/vaccinations.service.ts(116,9): error TS2353: Object literal may only specify known properties, and 'veterinarian' does not exist in type 'VaccinationInclude<DefaultArgs>'.
+src/modules/vaccinations/vaccinations.service.ts(145,9): error TS2353: Object literal may only specify known properties, and 'veterinarian' does not exist in type 'VaccinationInclude<DefaultArgs>'.
+src/modules/vaccinations/vaccinations.service.ts(215,37): error TS2339: Property 'administeredDate' does not exist on type 'UpdateVaccinationDto'.
+src/modules/vaccinations/vaccinations.service.ts(216,22): error TS2769: No overload matches this call.
+  Overload 1 of 5, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 5, '(vd: VarDate): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'VarDate'.
+      Type 'undefined' is not assignable to type 'VarDate'.
+  Overload 3 of 5, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/modules/vaccinations/vaccinations.service.ts(220,9): error TS2353: Object literal may only specify known properties, and 'manufacturer' does not exist in type '(Without<VaccinationUpdateInput, VaccinationUncheckedUpdateInput> & VaccinationUncheckedUpdateInput) | (Without<...> & VaccinationUpdateInput)'.
+src/modules/vaccinations/vaccinations.service.ts(232,9): error TS2353: Object literal may only specify known properties, and 'veterinarian' does not exist in type 'VaccinationInclude<DefaultArgs>'.
+src/modules/vaccinations/vaccinations.service.ts(295,9): error TS2353: Object literal may only specify known properties, and 'veterinarian' does not exist in type 'VaccinationInclude<DefaultArgs>'.
+src/modules/veterinarians/vet-dashboard.service.ts(26,9): error TS2561: Object literal may only specify known properties, but 'vetId' does not exist in type 'AppointmentWhereInput'. Did you mean to write 'petId'?
+src/modules/veterinarians/vet-dashboard.service.ts(61,9): error TS2561: Object literal may only specify known properties, but 'vetId' does not exist in type 'AppointmentWhereInput'. Did you mean to write 'petId'?
+src/modules/veterinarians/vet-dashboard.service.ts(89,20): error TS2561: Object literal may only specify known properties, but 'vetId' does not exist in type 'AppointmentWhereInput'. Did you mean to write 'petId'?
+src/modules/veterinarians/vet-dashboard.service.ts(93,13): error TS2561: Object literal may only specify known properties, but 'vetId' does not exist in type 'AppointmentWhereInput'. Did you mean to write 'petId'?
+src/modules/veterinarians/vet-dashboard.service.ts(99,13): error TS2561: Object literal may only specify known properties, but 'vetId' does not exist in type 'AppointmentWhereInput'. Did you mean to write 'petId'?
+src/modules/veterinarians/vet-dashboard.service.ts(110,9): error TS2353: Object literal may only specify known properties, and 'diagnosis' does not exist in type 'HealthRecordSelect<DefaultArgs>'.
+src/modules/veterinarians/vet-dashboard.service.ts(164,20): error TS2339: Property 'pet' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; status: AppointmentStatus; veterinarianId: string; clinicId: string | null; petId: string; ownerId: string; ... 4 more ...; notes: string | null; }'.
+src/modules/veterinarians/vet-dashboard.service.ts(165,24): error TS2339: Property 'pet' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; status: AppointmentStatus; veterinarianId: string; clinicId: string | null; petId: string; ownerId: string; ... 4 more ...; notes: string | null; }'.
+src/modules/veterinarians/vet-dashboard.service.ts(166,25): error TS2551: Property 'owner' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; status: AppointmentStatus; veterinarianId: string; clinicId: string | null; petId: string; ownerId: string; ... 4 more ...; notes: string | null; }'. Did you mean 'ownerId'?
+src/modules/veterinarians/vet-dashboard.service.ts(166,53): error TS2551: Property 'owner' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; status: AppointmentStatus; veterinarianId: string; clinicId: string | null; petId: string; ownerId: string; ... 4 more ...; notes: string | null; }'. Did you mean 'ownerId'?
+src/modules/veterinarians/vet-dashboard.service.ts(167,22): error TS2551: Property 'owner' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; status: AppointmentStatus; veterinarianId: string; clinicId: string | null; petId: string; ownerId: string; ... 4 more ...; notes: string | null; }'. Did you mean 'ownerId'?
+src/modules/veterinarians/vet-dashboard.service.ts(206,9): error TS2561: Object literal may only specify known properties, but 'vetId' does not exist in type 'AppointmentWhereInput'. Did you mean to write 'petId'?
+src/modules/veterinarians/veterinarians.service.ts(292,13): error TS2353: Object literal may only specify known properties, and 'owner' does not exist in type 'ReviewInclude<DefaultArgs>'.

@@ -48,7 +48,7 @@ export class ReviewsController {
   }
 
   @Get('breakdown/:veterinarianId')
-  getRatingBreakdown(@Param('veterinarianId') veterinerianId: string) {
+  getRatingBreakdown(@Param('veterinarianId') veterinarianId: string) {
     return this.reviewsService.getRatingBreakdown(veterinarianId);
   }
 

@@ -37,7 +37,7 @@ export class VetDashboardService {
             species: true,
           },
         },
-        petOwner: {
+        owner: {
           select: {
             user: {
               select: {
@@ -103,11 +103,11 @@ export class VetDashboardService {
       ]);
 
     // Get recent medical records
-    const recentRecords = await this.prisma.medicalRecord.findMany({
-      where: { veterinarianId: vet.id },
+    const recentRecords = await this.prisma.healthRecord.findMany({
+      where: { vetId: vet.id },
       select: {
         id: true,
-        diagnosis: true,
+        title: true,
         createdAt: true,
         pet: {
           select: {
@@ -122,7 +122,7 @@ export class VetDashboardService {
     // Get upcoming vaccinations
     const upcomingVaccinations = await this.prisma.vaccination.findMany({
       where: {
-        veterinarianId: vet.id,
+        vetId: vet.id,
         nextDueDate: {
           gte: today,
           lt: nextWeek,
@@ -161,10 +161,10 @@ export class VetDashboardService {
           time: apt.scheduledAt,
           type: apt.type,
           status: apt.status,
-          pet: apt.pet.name,
-          species: apt.pet.species,
-          owner: `${apt.petOwner.user.firstName} ${apt.petOwner.user.lastName}`,
-          phone: apt.petOwner.user.phone,
+          pet: apt.pet?.name,
+          species: apt.pet?.species,
+          owner: apt.owner?.user ? `${apt.owner.user.firstName} ${apt.owner.user.lastName}` : 'Unknown',
+          phone: apt.owner?.user?.phone || 'Unknown',
         })),
       },
       upcomingAppointments,
@@ -172,7 +172,7 @@ export class VetDashboardService {
         totalAppointments,
         completedAppointments,
         pendingAppointments,
-        averageRating: vet.averageRating,
+        averageRating: vet.rating,
         reviewCount: vet.reviewCount,
       },
       recentRecords,
@@ -181,8 +181,8 @@ export class VetDashboardService {
         vaccineName: vac.vaccineName,
         dueDate: vac.nextDueDate,
         petName: vac.pet.name,
-        ownerName: `${vac.pet.owner.user.firstName} ${vac.pet.owner.user.lastName}`,
-        ownerPhone: vac.pet.owner.user.phone,
+        ownerName: vac.pet.owner ? `${vac.pet.owner.user.firstName} ${vac.pet.owner.user.lastName}` : 'Unknown',
+        ownerPhone: vac.pet.owner ? vac.pet.owner.user.phone : 'Unknown',
       })),
     };
   }
@@ -219,7 +219,7 @@ export class VetDashboardService {
             dateOfBirth: true,
           },
         },
-        petOwner: {
+        owner: {
           select: {
             user: {
               select: {

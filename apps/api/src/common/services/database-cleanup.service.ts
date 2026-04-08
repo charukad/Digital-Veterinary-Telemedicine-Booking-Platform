@@ -68,7 +68,7 @@ export class DatabaseCleanupService {
   /**
    * Archive old completed appointments (optional)
    */
-  @Cron(CronExpression.EVERY_MONTH)
+  @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT)
   async archiveOldAppointments() {
     this.logger.log('Starting appointment archival...');
 

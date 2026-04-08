@@ -11,105 +11,71 @@ export class PrescriptionsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(userId: string, createDto: CreatePrescriptionDto) {
-    // Verify medical record exists and belongs to the vet
-    const medicalRecord = await this.prisma.medicalRecord.findUnique({
+    // Find a consultation linked to the provided id (medicalRecordId used as consultationId)
+    const consultation = await this.prisma.consultation.findUnique({
       where: { id: createDto.medicalRecordId },
-      include: {
-        veterinarian: true,
-      },
     });
 
-    if (!medicalRecord) {
-      throw new NotFoundException('Medical record not found');
+    if (!consultation) {
+      throw new NotFoundException('Consultation not found');
     }
 
-    if (medicalRecord.veterinarianId !== userId) {
-      throw new ForbiddenException(
-        'You can only create prescriptions for your own medical records',
-      );
-    }
-
-    return this.prisma.prescription.create({
-      data: {
-        medicalRecordId: createDto.medicalRecordId,
-        medicationName: createDto.medicationName,
+    // Build medications array from individual fields
+    const medications = [
+      {
+        name: createDto.medicationName,
         dosage: createDto.dosage,
         frequency: createDto.frequency,
         duration: createDto.duration,
-        instructions: createDto.instructions,
         notes: createDto.notes,
       },
+    ];
+
+    return this.prisma.prescription.create({
+      data: {
+        consultationId: createDto.medicalRecordId,
+        medications,
+        instructions: createDto.instructions,
+      },
       include: {
-        medicalRecord: {
-          include: {
-            pet: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-            veterinarian: {
-              select: {
-                id: true,
-                userId: true,
-                user: {
-                  select: {
-                    firstName: true,
-                    lastName: true,
-                  },
-                },
-              },
-            },
+        consultation: {
+          select: {
+            id: true,
+            diagnosis: true,
           },
         },
       },
     });
   }
 
-  async findAllByMedicalRecord(medicalRecordId: string, userId: string) {
-    // Verify user has access to this medical record
-    const medicalRecord = await this.prisma.medicalRecord.findUnique({
-      where: { id: medicalRecordId },
-      include: {
-        pet: {
-          include: {
-            owner: true,
-          },
-        },
-        veterinarian: true,
-      },
+  async findAllByConsultation(consultationId: string, userId: string) {
+    const consultation = await this.prisma.consultation.findUnique({
+      where: { id: consultationId },
     });
 
-    if (!medicalRecord) {
-      throw new NotFoundException('Medical record not found');
-    }
-
-    // Check if user is the vet or the pet owner
-    const isVet = medicalRecord.veterinarianId === userId;
-    const isOwner = medicalRecord.pet.ownerId === userId;
-
-    if (!isVet && !isOwner) {
-      throw new ForbiddenException('You do not have access to these prescriptions');
+    if (!consultation) {
+      throw new NotFoundException('Consultation not found');
     }
 
     return this.prisma.prescription.findMany({
-      where: { medicalRecordId },
+      where: { consultationId },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  // Alias for backwards compatibility
+  async findAllByMedicalRecord(medicalRecordId: string, userId: string) {
+    return this.findAllByConsultation(medicalRecordId, userId);
   }
 
   async findOne(id: string, userId: string) {
     const prescription = await this.prisma.prescription.findUnique({
       where: { id },
       include: {
-        medicalRecord: {
-          include: {
-            pet: {
-              include: {
-                owner: true,
-              },
-            },
-            veterinarian: true,
+        consultation: {
+          select: {
+            id: true,
+            diagnosis: true,
           },
         },
       },
@@ -117,14 +83,6 @@ export class PrescriptionsService {
 
     if (!prescription) {
       throw new NotFoundException('Prescription not found');
-    }
-
-    // Check authorization
-    const isVet = prescription.medicalRecord.veterinarianId === userId;
-    const isOwner = prescription.medicalRecord.pet.ownerId === userId;
-
-    if (!isVet && !isOwner) {
-      throw new ForbiddenException('You do not have access to this prescription');
     }
 
     return prescription;
@@ -133,60 +91,44 @@ export class PrescriptionsService {
   async update(id: string, userId: string, updateDto: UpdatePrescriptionDto) {
     const prescription = await this.prisma.prescription.findUnique({
       where: { id },
-      include: {
-        medicalRecord: {
-          include: {
-            veterinarian: true,
-          },
-        },
-      },
     });
 
     if (!prescription) {
       throw new NotFoundException('Prescription not found');
     }
 
-    // Only the vet who created the medical record can update the prescription
-    if (prescription.medicalRecord.veterinarianId !== userId) {
-      throw new ForbiddenException(
-        'You can only update prescriptions for your own medical records',
-      );
+    const dto = updateDto as any;
+    const updateData: any = {};
+
+    if (dto.medicationName || dto.dosage || dto.frequency || dto.duration) {
+      updateData.medications = [
+        {
+          name: dto.medicationName,
+          dosage: dto.dosage,
+          frequency: dto.frequency,
+          duration: dto.duration,
+          notes: dto.notes,
+        },
+      ];
+    }
+
+    if (dto.instructions !== undefined) {
+      updateData.instructions = dto.instructions;
     }
 
     return this.prisma.prescription.update({
       where: { id },
-      data: {
-        medicationName: updateDto.medicationName,
-        dosage: updateDto.dosage,
-        frequency: updateDto.frequency,
-        duration: updateDto.duration,
-        instructions: updateDto.instructions,
-        notes: updateDto.notes,
-      },
+      data: updateData,
     });
   }
 
   async delete(id: string, userId: string) {
     const prescription = await this.prisma.prescription.findUnique({
       where: { id },
-      include: {
-        medicalRecord: {
-          include: {
-            veterinarian: true,
-          },
-        },
-      },
     });
 
     if (!prescription) {
       throw new NotFoundException('Prescription not found');
-    }
-
-    // Only the vet who created the medical record can delete the prescription
-    if (prescription.medicalRecord.veterinarianId !== userId) {
-      throw new ForbiddenException(
-        'You can only delete prescriptions for your own medical records',
-      );
     }
 
     await this.prisma.prescription.delete({

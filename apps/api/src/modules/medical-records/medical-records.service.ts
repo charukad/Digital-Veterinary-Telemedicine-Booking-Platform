@@ -16,25 +16,15 @@ export class MedicalRecordsService {
       throw new ForbiddenException('Only veterinarians can create medical records');
     }
 
-    // Verify the appointment belongs to this vet
-    const appointment = await this.prisma.appointment.findUnique({
-      where: { id: createDto.appointmentId },
-    });
-
-    if (!appointment || appointment.veterinarianId !== vet.id) {
-      throw new ForbiddenException('You can only create records for your appointments');
-    }
-
-    // Create the medical record
-    const record = await this.prisma.medicalRecord.create({
+    // Create the health record (the current schema)
+    const record = await this.prisma.healthRecord.create({
       data: {
         petId: createDto.petId,
-        veterinarianId: vet.id,
-        appointmentId: createDto.appointmentId,
-        diagnosis: createDto.diagnosis,
-        treatment: createDto.treatment,
-        prescription: createDto.prescription,
-        notes: createDto.notes,
+        vetId: vet.id,
+        recordType: 'checkup',
+        title: createDto.diagnosis || 'Health Record',
+        description: `Diagnosis: ${createDto.diagnosis || ''}\nTreatment: ${createDto.treatment || ''}\n${createDto.notes || ''}`.trim(),
+        recordDate: new Date(),
         attachments: createDto.attachments || [],
       },
       include: {
@@ -44,17 +34,6 @@ export class MedicalRecordsService {
             name: true,
             species: true,
             breed: true,
-          },
-        },
-        veterinarian: {
-          select: {
-            id: true,
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-              },
-            },
           },
         },
       },
@@ -92,10 +71,10 @@ export class MedicalRecordsService {
         return [];
       }
 
-      whereClause.veterinarianId = vet.id;
+      whereClause.vetId = vet.id;
     }
 
-    return this.prisma.medicalRecord.findMany({
+    return this.prisma.healthRecord.findMany({
       where: whereClause,
       include: {
         pet: {
@@ -106,31 +85,13 @@ export class MedicalRecordsService {
             breed: true,
           },
         },
-        veterinarian: {
-          select: {
-            id: true,
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
-        },
-        appointment: {
-          select: {
-            id: true,
-            scheduledAt: true,
-            type: true,
-          },
-        },
       },
       orderBy: { createdAt: 'desc' },
     });
   }
 
   async findOne(id: string, userId: string, role: string) {
-    const record = await this.prisma.medicalRecord.findUnique({
+    const record = await this.prisma.healthRecord.findUnique({
       where: { id },
       include: {
         pet: {
@@ -140,6 +101,7 @@ export class MedicalRecordsService {
             species: true,
             breed: true,
             dateOfBirth: true,
+            ownerId: true,
             owner: {
               select: {
                 user: {
@@ -147,32 +109,10 @@ export class MedicalRecordsService {
                     firstName: true,
                     lastName: true,
                     email: true,
-                    phone: true,
                   },
                 },
               },
             },
-          },
-        },
-        veterinarian: {
-          select: {
-            id: true,
-            licenseNumber: true,
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-                email: true,
-              },
-            },
-          },
-        },
-        appointment: {
-          select: {
-            id: true,
-            scheduledAt: true,
-            type: true,
-            status: true,
           },
         },
       },
@@ -198,7 +138,7 @@ export class MedicalRecordsService {
         where: { userId },
       });
 
-      if (record.veterinarianId !== vet?.id) {
+      if (record.vetId !== vet?.id) {
         throw new ForbiddenException('You can only view your own records');
       }
     }
@@ -217,7 +157,7 @@ export class MedicalRecordsService {
     }
 
     // Verify ownership
-    const record = await this.prisma.medicalRecord.findUnique({
+    const record = await this.prisma.healthRecord.findUnique({
       where: { id },
     });
 
@@ -225,18 +165,15 @@ export class MedicalRecordsService {
       throw new NotFoundException('Medical record not found');
     }
 
-    if (record.veterinarianId !== vet.id) {
+    if (record.vetId !== vet.id) {
       throw new ForbiddenException('You can only update your own records');
     }
 
-    // Update the record
-    return this.prisma.medicalRecord.update({
+    return this.prisma.healthRecord.update({
       where: { id },
       data: {
-        diagnosis: updateDto.diagnosis,
-        treatment: updateDto.treatment,
-        prescription: updateDto.prescription,
-        notes: updateDto.notes,
+        title: updateDto.diagnosis || undefined,
+        description: `${updateDto.diagnosis ? 'Diagnosis: ' + updateDto.diagnosis : ''}\n${updateDto.treatment ? 'Treatment: ' + updateDto.treatment : ''}\n${updateDto.notes || ''}`.trim() || undefined,
         attachments: updateDto.attachments,
         updatedAt: new Date(),
       },
@@ -247,17 +184,6 @@ export class MedicalRecordsService {
             name: true,
             species: true,
             breed: true,
-          },
-        },
-        veterinarian: {
-          select: {
-            id: true,
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-              },
-            },
           },
         },
       },
@@ -274,8 +200,7 @@ export class MedicalRecordsService {
       throw new ForbiddenException('Only veterinarians can delete medical records');
     }
 
-    // Verify ownership
-    const record = await this.prisma.medicalRecord.findUnique({
+    const record = await this.prisma.healthRecord.findUnique({
       where: { id },
     });
 
@@ -283,12 +208,11 @@ export class MedicalRecordsService {
       throw new NotFoundException('Medical record not found');
     }
 
-    if (record.veterinarianId !== vet.id) {
+    if (record.vetId !== vet.id) {
       throw new ForbiddenException('You can only delete your own records');
     }
 
-    // Delete the record
-    await this.prisma.medicalRecord.delete({
+    await this.prisma.healthRecord.delete({
       where: { id },
     });
 
@@ -296,7 +220,6 @@ export class MedicalRecordsService {
   }
 
   async findByPet(petId: string, userId: string, role: string) {
-    // Authorization check
     if (role === 'PET_OWNER') {
       const petOwner = await this.prisma.petOwner.findUnique({
         where: { userId },
@@ -309,25 +232,13 @@ export class MedicalRecordsService {
       }
     }
 
-    return this.prisma.medicalRecord.findMany({
+    return this.prisma.healthRecord.findMany({
       where: { petId },
       include: {
-        veterinarian: {
+        pet: {
           select: {
             id: true,
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
-        },
-        appointment: {
-          select: {
-            id: true,
-            scheduledAt: true,
-            type: true,
+            name: true,
           },
         },
       },

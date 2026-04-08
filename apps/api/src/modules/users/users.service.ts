@@ -64,13 +64,9 @@ export class UsersService {
       select: {
         id: true,
         email: true,
-        emailAppointmentReminders: true,
-        emailAppointmentConfirmations: true,
-        emailPaymentReceipts: true,
-        emailPromotions: true,
-        emailSystemUpdates: true,
-        smsAppointmentReminders: true,
-        smsPaymentConfirmations: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
       },
     });
 
@@ -88,13 +84,9 @@ export class UsersService {
       select: {
         id: true,
         email: true,
-        emailAppointmentReminders: true,
-        emailAppointmentConfirmations: true,
-        emailPaymentReceipts: true,
-        emailPromotions: true,
-        emailSystemUpdates: true,
-        smsAppointmentReminders: true,
-        smsPaymentConfirmations: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
       },
     });
   }

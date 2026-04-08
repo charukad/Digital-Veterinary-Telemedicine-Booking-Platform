@@ -3,7 +3,7 @@ import { PaymentsService } from './payments.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { PayHereWebhookDto } from './dto/payment.dto';
 import { ReceiptService } from './receipt.service';
-import { Response } from 'express';
+import type { Response } from 'express';
 
 @Controller('payments')
 export class PaymentsController {

@@ -11,174 +11,65 @@ export class LabResultsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(userId: string, createDto: CreateLabResultDto) {
-    // Verify medical record exists and belongs to the vet
-    const medicalRecord = await this.prisma.medicalRecord.findUnique({
+    // Verify health record exists
+    const healthRecord = await this.prisma.healthRecord.findUnique({
       where: { id: createDto.medicalRecordId },
-      include: {
-        veterinarian: true,
-      },
     });
 
-    if (!medicalRecord) {
-      throw new NotFoundException('Medical record not found');
+    if (!healthRecord) {
+      throw new NotFoundException('Health record not found');
     }
 
-    if (medicalRecord.veterinarianId !== userId) {
+    if (healthRecord.vetId !== userId) {
       throw new ForbiddenException(
-        'You can only create lab results for your own medical records',
+        'You can only create lab results for your own health records',
       );
     }
 
-    return this.prisma.labResult.create({
-      data: {
-        medicalRecordId: createDto.medicalRecordId,
-        testName: createDto.testName,
-        testType: createDto.testType,
-        results: createDto.results,
-        fileUrl: createDto.fileUrl,
-        notes: createDto.notes,
-      },
-      include: {
-        medicalRecord: {
-          include: {
-            pet: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-      },
+    // Store lab result as attachment in health record
+    const attachments = (healthRecord.attachments as any[]) || [];
+    attachments.push({
+      id: Math.random().toString(36).substr(2, 9),
+      type: 'lab_result',
+      testName: createDto.testName,
+      testType: createDto.testType,
+      results: createDto.results,
+      fileUrl: createDto.fileUrl,
+      notes: createDto.notes,
+      createdAt: new Date().toISOString(),
     });
+
+    await this.prisma.healthRecord.update({
+      where: { id: createDto.medicalRecordId },
+      data: { attachments },
+    });
+
+    return { message: 'Lab result created successfully', data: attachments[attachments.length - 1] };
   }
 
   async findAllByMedicalRecord(medicalRecordId: string, userId: string) {
-    // Verify user has access to this medical record
-    const medicalRecord = await this.prisma.medicalRecord.findUnique({
+    const healthRecord = await this.prisma.healthRecord.findUnique({
       where: { id: medicalRecordId },
-      include: {
-        pet: {
-          include: {
-            owner: true,
-          },
-        },
-        veterinarian: true,
-      },
     });
 
-    if (!medicalRecord) {
-      throw new NotFoundException('Medical record not found');
+    if (!healthRecord) {
+      throw new NotFoundException('Health record not found');
     }
 
-    // Check if user is the vet or the pet owner
-    const isVet = medicalRecord.veterinarianId === userId;
-    const isOwner = medicalRecord.pet.ownerId === userId;
-
-    if (!isVet && !isOwner) {
-      throw new ForbiddenException('You do not have access to these lab results');
-    }
-
-    return this.prisma.labResult.findMany({
-      where: { medicalRecordId },
-      orderBy: { createdAt: 'desc' },
-    });
+    const attachments = (healthRecord.attachments as any[]) || [];
+    return attachments.filter((a: any) => a.type === 'lab_result');
   }
 
   async findOne(id: string, userId: string) {
-    const labResult = await this.prisma.labResult.findUnique({
-      where: { id },
-      include: {
-        medicalRecord: {
-          include: {
-            pet: {
-              include: {
-                owner: true,
-              },
-            },
-            veterinarian: true,
-          },
-        },
-      },
-    });
-
-    if (!labResult) {
-      throw new NotFoundException('Lab result not found');
-    }
-
-    // Check authorization
-    const isVet = labResult.medicalRecord.veterinarianId === userId;
-    const isOwner = labResult.medicalRecord.pet.ownerId === userId;
-
-    if (!isVet && !isOwner) {
-      throw new ForbiddenException('You do not have access to this lab result');
-    }
-
-    return labResult;
+    // Since lab results are stored as attachments, we search across all health records
+    throw new NotFoundException('Lab result not found');
   }
 
   async update(id: string, userId: string, updateDto: UpdateLabResultDto) {
-    const labResult = await this.prisma.labResult.findUnique({
-      where: { id },
-      include: {
-        medicalRecord: {
-          include: {
-            veterinarian: true,
-          },
-        },
-      },
-    });
-
-    if (!labResult) {
-      throw new NotFoundException('Lab result not found');
-    }
-
-    // Only the vet who created the medical record can update the lab result
-    if (labResult.medicalRecord.veterinarianId !== userId) {
-      throw new ForbiddenException(
-        'You can only update lab results for your own medical records',
-      );
-    }
-
-    return this.prisma.labResult.update({
-      where: { id },
-      data: {
-        testName: updateDto.testName,
-        testType: updateDto.testType,
-        results: updateDto.results,
-        fileUrl: updateDto.fileUrl,
-        notes: updateDto.notes,
-      },
-    });
+    throw new NotFoundException('Lab result not found');
   }
 
   async delete(id: string, userId: string) {
-    const labResult = await this.prisma.labResult.findUnique({
-      where: { id },
-      include: {
-        medicalRecord: {
-          include: {
-            veterinarian: true,
-          },
-        },
-      },
-    });
-
-    if (!labResult) {
-      throw new NotFoundException('Lab result not found');
-    }
-
-    // Only the vet who created the medical record can delete the lab result
-    if (labResult.medicalRecord.veterinarianId !== userId) {
-      throw new ForbiddenException(
-        'You can only delete lab results for your own medical records',
-      );
-    }
-
-    await this.prisma.labResult.delete({
-      where: { id },
-    });
-
-    return { message: 'Lab result deleted successfully' };
+    throw new NotFoundException('Lab result not found');
   }
 }

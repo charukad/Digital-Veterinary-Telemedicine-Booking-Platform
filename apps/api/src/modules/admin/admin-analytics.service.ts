@@ -91,7 +91,7 @@ export class AdminAnalyticsService {
 
       // Pending vet verifications
       this.prisma.veterinarian.count({
-        where: { verificationStatus: 'PENDING' },
+        where: { verified: false },
       }),
     ]);
 
@@ -134,7 +134,7 @@ export class AdminAnalyticsService {
    * Get user growth statistics (last 12 months)
    */
   async getUserGrowth() {
-    const months = [];
+    const months: { month: string; count: number }[] = [];
     const now = new Date();
 
     for (let i = 11; i >= 0; i--) {
@@ -163,7 +163,7 @@ export class AdminAnalyticsService {
    * Get revenue analytics (last 12 months)
    */
   async getRevenueAnalytics() {
-    const months = [];
+    const months: { month: string; revenue: any; transactions: number }[] = [];
     const now = new Date();
 
     for (let i = 11; i >= 0; i--) {
@@ -245,6 +245,7 @@ export class AdminAnalyticsService {
             email: true,
           },
         },
+        specializations: true,
         _count: {
           select: {
             appointments: true,
@@ -263,9 +264,9 @@ export class AdminAnalyticsService {
       id: vet.id,
       name: `Dr. ${vet.user.firstName} ${vet.user.lastName}`,
       email: vet.user.email,
-      specialization: vet.specialization,
+      specialization: vet.specializations?.map(s => s.specialization).join(', ') || '',
       appointmentCount: vet._count.appointments,
-      rating: vet.averageRating,
+      rating: vet.rating ? vet.rating.toNumber() : 0,
     }));
   }
 

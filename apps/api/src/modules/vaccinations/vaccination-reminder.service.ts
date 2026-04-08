@@ -41,9 +41,11 @@ export class VaccinationReminderService {
     });
 
     for (const vaccination of upcomingVaccinations) {
-      const daysUntilDue = Math.ceil(
-        (vaccination.nextDueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
-      );
+      const daysUntilDue = vaccination.nextDueDate
+        ? Math.ceil(
+            (vaccination.nextDueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+          )
+        : 0;
 
       await this.emailService.sendEmail({
         to: vaccination.pet.owner.user.email,
@@ -55,7 +57,7 @@ export class VaccinationReminderService {
           <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
             <p><strong>Pet:</strong> ${vaccination.pet.name}</p>
             <p><strong>Vaccine:</strong> ${vaccination.vaccineName}</p>
-            <p><strong>Due Date:</strong> ${vaccination.nextDueDate.toLocaleDateString()}</p>
+            <p><strong>Due Date:</strong> ${vaccination.nextDueDate?.toLocaleDateString() ?? 'N/A'}</p>
           </div>
           <p>Please schedule an appointment with your veterinarian.</p>
           <p>Best regards,<br/>VetCare Sri Lanka</p>

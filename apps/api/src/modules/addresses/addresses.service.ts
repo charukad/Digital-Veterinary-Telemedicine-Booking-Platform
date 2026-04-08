@@ -18,19 +18,19 @@ export class AddressesService {
     // If this is marked as default, unset other defaults
     if (createDto.isDefault) {
       await this.prisma.address.updateMany({
-        where: { petOwnerId: petOwner.id },
+        where: { ownerId: petOwner.id },
         data: { isDefault: false },
       });
     }
 
     return this.prisma.address.create({
       data: {
-        petOwnerId: petOwner.id,
-        label: createDto.label,
+        ownerId: petOwner.id,
+        // label: createDto.label,
         addressLine1: createDto.addressLine1,
         addressLine2: createDto.addressLine2,
         city: createDto.city,
-        province: createDto.province,
+        // province: createDto.province,
         postalCode: createDto.postalCode,
         latitude: createDto.latitude ? parseFloat(createDto.latitude) : null,
         longitude: createDto.longitude ? parseFloat(createDto.longitude) : null,
@@ -49,7 +49,7 @@ export class AddressesService {
     }
 
     return this.prisma.address.findMany({
-      where: { petOwnerId: petOwner.id },
+      where: { ownerId: petOwner.id },
       orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
     });
   }
@@ -71,7 +71,7 @@ export class AddressesService {
       throw new NotFoundException('Address not found');
     }
 
-    if (address.petOwnerId !== petOwner.id) {
+    if (address.ownerId !== petOwner.id) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -95,7 +95,7 @@ export class AddressesService {
       throw new NotFoundException('Address not found');
     }
 
-    if (address.petOwnerId !== petOwner.id) {
+    if (address.ownerId !== petOwner.id) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -103,7 +103,7 @@ export class AddressesService {
     if (updateDto.isDefault) {
       await this.prisma.address.updateMany({
         where: {
-          petOwnerId: petOwner.id,
+          ownerId: petOwner.id,
           id: { not: id },
         },
         data: { isDefault: false },
@@ -113,11 +113,11 @@ export class AddressesService {
     return this.prisma.address.update({
       where: { id },
       data: {
-        label: updateDto.label,
+        // label: updateDto.label,
         addressLine1: updateDto.addressLine1,
         addressLine2: updateDto.addressLine2,
         city: updateDto.city,
-        province: updateDto.province,
+        // province: updateDto.province,
         postalCode: updateDto.postalCode,
         latitude: updateDto.latitude ? parseFloat(updateDto.latitude) : undefined,
         longitude: updateDto.longitude ? parseFloat(updateDto.longitude) : undefined,
@@ -143,7 +143,7 @@ export class AddressesService {
       throw new NotFoundException('Address not found');
     }
 
-    if (address.petOwnerId !== petOwner.id) {
+    if (address.ownerId !== petOwner.id) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -171,14 +171,14 @@ export class AddressesService {
       throw new NotFoundException('Address not found');
     }
 
-    if (address.petOwnerId !== petOwner.id) {
+    if (address.ownerId !== petOwner.id) {
       throw new ForbiddenException('Access denied');
     }
 
     // Unset all other defaults
     await this.prisma.address.updateMany({
       where: {
-        petOwnerId: petOwner.id,
+        ownerId: petOwner.id,
         id: { not: id },
       },
       data: { isDefault: false },

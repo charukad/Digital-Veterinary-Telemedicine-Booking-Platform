@@ -25,12 +25,15 @@ export class ReviewsService {
     if (createDto.appointmentId) {
       const appointment = await this.prisma.appointment.findUnique({
         where: { id: createDto.appointmentId },
-        include: { review: true },
       });
 
       if (!appointment) {
         throw new NotFoundException('Appointment not found');
       }
+
+      const existingReview = await this.prisma.review.findUnique({
+         where: { appointmentId: createDto.appointmentId },
+      });
 
       if (appointment.ownerId !== petOwner.id) {
         throw new ForbiddenException('You can only review your own appointments');
@@ -40,7 +43,7 @@ export class ReviewsService {
         throw new BadRequestException('Can only review completed appointments');
       }
 
-      if (appointment.review) {
+      if (existingReview) {
         throw new BadRequestException('Appointment already reviewed');
       }
     }
@@ -49,10 +52,11 @@ export class ReviewsService {
     const review = await this.prisma.review.create({
       data: {
         ...createDto,
-        petOwnerId: petOwner.id,
+        appointmentId: createDto.appointmentId!,
+        userId: userId,
       },
       include: {
-        petOwner: {
+        user: {
           select: {
             firstName: true,
             lastName: true,
@@ -60,6 +64,26 @@ export class ReviewsService {
         },
       },
     });
+
+    return review;
+  }
+
+  async findOne(id: string) {
+    const review = await this.prisma.review.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: { firstName: true, lastName: true },
+        },
+        veterinarian: {
+          include: { user: { select: { email: true } } },
+        },
+      },
+    });
+
+    if (!review) {
+      throw new NotFoundException('Review not found');
+    }
 
     return review;
   }
@@ -131,9 +155,9 @@ export class ReviewsService {
       this.prisma.review.findMany({
         where: veterinarianId ? { veterinarianId } : {},
         include: {
-          petOwner: { // Changed from 'user' to 'petOwner' to match existing schema usage
+          user: {
             select: {
-              userId: true, // Assuming petOwner has a userId field
+              id: true,
               firstName: true,
               lastName: true,
             },
@@ -163,7 +187,7 @@ export class ReviewsService {
     const reviews = await this.prisma.review.findMany({
       where: { veterinarianId },
       include: {
-        petOwner: {
+        user: {
           select: {
             firstName: true,
             lastName: true,
@@ -187,21 +211,12 @@ export class ReviewsService {
   }
 
   async findByOwner(userId: string) {
-    const petOwner = await this.prisma.petOwner.findUnique({
-      where: { userId },
-    });
-
-    if (!petOwner) {
-      return [];
-    }
-
     return this.prisma.review.findMany({
-      where: { petOwnerId: petOwner.id },
+      where: { userId },
       include: {
         veterinarian: {
           select: {
-            firstName: true,
-            lastName: true,
+            user: { select: { firstName: true, lastName: true } },
           },
         },
       },
@@ -213,9 +228,9 @@ export class ReviewsService {
     const review = await this.prisma.review.findUnique({
       where: { id: reviewId },
       include: {
-        petOwner: {
+        user: {
           select: {
-            userId: true,
+            id: true,
           },
         },
       },
@@ -225,7 +240,7 @@ export class ReviewsService {
       throw new NotFoundException('Review not found');
     }
 
-    if (review.petOwner.userId !== userId) {
+    if (review.user.id !== userId) {
       throw new ForbiddenException('You can only edit your own reviews');
     }
 
@@ -239,9 +254,9 @@ export class ReviewsService {
     const review = await this.prisma.review.findUnique({
       where: { id: reviewId },
       include: {
-        petOwner: {
+        user: {
           select: {
-            userId: true,
+            id: true,
           },
         },
       },
@@ -251,7 +266,7 @@ export class ReviewsService {
       throw new NotFoundException('Review not found');
     }
 
-    if (review.petOwner.userId !== userId) {
+    if (review.user.id !== userId) {
       throw new ForbiddenException('You can only delete your own reviews');
     }
 
@@ -276,7 +291,7 @@ export class ReviewsService {
 
     return this.prisma.review.update({
       where: { id: reviewId },
-      data: { reply, repliedAt: new Date() },
+      data: { vetResponse: reply },
     });
   }
 
@@ -296,7 +311,7 @@ export class ReviewsService {
 
     return this.prisma.review.update({
       where: { id: reviewId },
-      data: { reply },
+      data: { vetResponse: reply },
     });
   }
 
@@ -316,7 +331,7 @@ export class ReviewsService {
 
     return this.prisma.review.update({
       where: { id: reviewId },
-      data: { reply: null, repliedAt: null },
+      data: { vetResponse: null },
     });
   }
 

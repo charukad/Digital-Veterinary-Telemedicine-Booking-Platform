@@ -89,55 +89,8 @@ export class AdminController {
   @Get('users')
   @ApiOperation({ summary: 'Get all users with filters' })
   async getAllUsers(
-    @Query('type') userType?: string,
     @Query('search') search?: string,
-  ) {
-    return this.adminService.getAllUsers(userType, search);
-  }
-
-  @Patch('users/:userId/status')
-  @ApiOperation({ summary: 'Update user status (suspend/activate)' })
-  async updateUserStatus(
-    @Param('userId') userId: string,
-    @Body('status') status: string,
-  ) {
-    return this.adminService.updateUserStatus(userId, status);
-  }
-}
-
-
-@Controller('admin')
-@UseGuards(JwtAuthGuard, AdminGuard)
-export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
-
-  @Get('verification-queue')
-  async getVerificationQueue() {
-    return this.adminService.getVerificationQueue();
-  }
-
-  @Post('verify/:vetId/approve')
-  async approveVeterinarian(@Param('vetId') vetId: string) {
-    return this.adminService.approveVeterinarian(vetId);
-  }
-
-  @Post('verify/:vetId/reject')
-  async rejectVeterinarian(
-    @Param('vetId') vetId: string,
-    @Body('reason') reason: string,
-  ) {
-    return this.adminService.rejectVeterinarian(vetId, reason);
-  }
-
-  @Get('stats')
-  async getStats() {
-    return this.adminService.getStats();
-  }
-
-  // User Management
-  @Get('users')
-  getAllUsers(
-    @Query('search') search?: string,
+    @Query('type') type?: string,
     @Query('role') role?: string,
     @Query('status') status?: string,
     @Query('page') page?: string,
@@ -145,7 +98,7 @@ export class AdminController {
   ) {
     return this.adminService.getAllUsers({
       search,
-      role,
+      userType: type || role,
       status,
       page: page ? parseInt(page) : undefined,
       limit: limit ? parseInt(limit) : undefined,
@@ -153,17 +106,36 @@ export class AdminController {
   }
 
   @Get('users/:id')
-  getUserDetails(@Param('id') id: string) {
+  @ApiOperation({ summary: 'Get user details by ID' })
+  async getUserDetails(@Param('id') id: string) {
     return this.adminService.getUserDetails(id);
   }
 
   @Patch('users/:id/suspend')
-  suspendUser(@Param('id') id: string, @Body('reason') reason?: string) {
+  @ApiOperation({ summary: 'Suspend user' })
+  async suspendUser(
+    @Param('id') id: string,
+    @Body('reason') reason?: string,
+  ) {
     return this.adminService.suspendUser(id, reason);
   }
 
   @Patch('users/:id/activate')
-  activateUser(@Param('id') id: string) {
+  @ApiOperation({ summary: 'Activate user' })
+  async activateUser(@Param('id') id: string) {
     return this.adminService.activateUser(id);
+  }
+
+  @Patch('users/:id/status')
+  @ApiOperation({ summary: 'Update user status' })
+  async updateUserStatus(
+    @Param('id') id: string,
+    @Body('status') status: string,
+  ) {
+    if (status === 'SUSPENDED' || status === 'INACTIVE') {
+      return this.adminService.suspendUser(id, 'Status changed to ' + status);
+    } else if (status === 'ACTIVE') {
+      return this.adminService.activateUser(id);
+    }
   }
 }

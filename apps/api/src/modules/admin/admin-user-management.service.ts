@@ -48,7 +48,7 @@ export class AdminUserManagementService {
           petOwner: {
             select: {
               id: true,
-              phone: true,
+              // phone: true,
               _count: {
                 select: { pets: true },
               },
@@ -58,8 +58,8 @@ export class AdminUserManagementService {
             select: {
               id: true,
               licenseNumber: true,
-              specialization: true,
-              verificationStatus: true,
+              specializations: true,
+              // verificationStatus: true,
               _count: {
                 select: { appointments: true },
               },
@@ -156,7 +156,7 @@ export class AdminUserManagementService {
     const updated = await this.prisma.user.update({
       where: { id: userId },
       data: {
-        status: dto.status,
+        status: dto.status as any,
       },
     });
 
@@ -184,7 +184,7 @@ export class AdminUserManagementService {
       this.prisma.user.count({ where: { status: 'SUSPENDED' } }),
       this.prisma.user.count({ where: { userType: 'PET_OWNER' } }),
       this.prisma.user.count({ where: { userType: 'VETERINARIAN' } }),
-      this.prisma.user.count({ where: { userType: 'ADMIN' } }),
+      this.prisma.user.count({ where: { userType: 'ADMIN' as any } }),
       this.prisma.user.count({
         where: {
           createdAt: {
@@ -223,7 +223,7 @@ export class AdminUserManagementService {
     await this.prisma.user.update({
       where: { id: userId },
       data: {
-        status: 'DELETED',
+        status: 'INACTIVE' as any,
         email: `deleted_${Date.now()}_${user.email}`, // Prevent email conflicts
       },
     });

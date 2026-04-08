@@ -36,6 +36,7 @@
     "@nestjs/throttler": "^5.0.0",
     "@nestjs/websockets": "^10.0.0",
     "@prisma/client": "^5.0.0",
+    "@types/socket.io": "^3.0.2",
     "@vetcare/types": "workspace:*",
     "@vetcare/validations": "workspace:*",
     "agora-token": "^2.0.3",
@@ -52,6 +53,7 @@
     "reflect-metadata": "^0.1.13",
     "resend": "^6.9.3",
     "rxjs": "^7.8.1",
+    "socket.io": "^4.8.3",
     "streamifier": "^0.1.1",
     "swagger-ui-express": "^5.0.0",
     "zod": "^3.23.8"

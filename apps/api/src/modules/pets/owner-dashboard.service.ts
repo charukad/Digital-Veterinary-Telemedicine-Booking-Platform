@@ -70,10 +70,10 @@ export class OwnerDashboardService {
         species: true,
         breed: true,
         profileImage: true,
-        medicalRecords: {
+        healthRecords: {
           select: {
             id: true,
-            diagnosis: true,
+            title: true,
             createdAt: true,
           },
           orderBy: { createdAt: 'desc' },

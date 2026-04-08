@@ -1,4 +1,4 @@
-import { IsEmail, IsOptional, IsString, IsEnum } from 'class-validator';
+import { IsEmail, IsOptional, IsString, IsEnum, IsArray } from 'class-validator';
 
 export enum UserFilterType {
   ALL = 'all',

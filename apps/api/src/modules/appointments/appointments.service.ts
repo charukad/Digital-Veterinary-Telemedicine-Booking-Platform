@@ -109,7 +109,7 @@ export class AppointmentsService {
           to: ownerUser.email,
           ownerName: `${petOwner.firstName || ''} ${petOwner.lastName || ''}`.trim() || 'Pet Owner',
           petName: pet.name,
-          vetName: `Dr. ${vet.firstName || ''} ${vet.lastName || ''}`.trim() || 'Veterinarian',
+          vetName: `Dr. ${(vet as any).user?.firstName || vet.userId || ''} ${(vet as any).user?.lastName || ''}`.trim() || 'Veterinarian',
           appointmentDate: scheduledAt.toLocaleDateString('en-US', {
             weekday: 'long',
             year: 'numeric',
@@ -323,7 +323,7 @@ export class AppointmentsService {
           petName: updated.pet.name,
           oldStatus: appointment.status,
           newStatus: updated.status,
-          vetName: `Dr. ${updated.veterinarian.firstName || ''} ${updated.veterinarian.lastName || ''}`.trim() || 'Veterinarian',
+          vetName: `Dr. ${(updated.veterinarian as any).user?.firstName || ''} ${(updated.veterinarian as any).user?.lastName || ''}`.trim() || 'Veterinarian',
         });
       } catch (error) {
         console.error('Failed to send status update email:', error);

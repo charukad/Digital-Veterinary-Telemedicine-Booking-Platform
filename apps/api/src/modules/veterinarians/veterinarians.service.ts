@@ -289,7 +289,7 @@ export class VeterinariansService {
         },
         reviews: {
           include: {
-            petOwner: {
+            user: {
               select: {
                 firstName: true,
                 lastName: true,

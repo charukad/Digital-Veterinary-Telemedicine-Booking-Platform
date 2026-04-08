@@ -199,16 +199,12 @@ export class AdminService {
           id: true,
           email: true,
           phone: true,
+          firstName: true,
+          lastName: true,
           userType: true,
           status: true,
           createdAt: true,
           updatedAt: true,
-          petOwner: {
-            select: { firstName: true, lastName: true }
-          },
-          veterinarian: {
-            select: { firstName: true, lastName: true } // Assuming vet has these based on logic
-          }
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -220,8 +216,8 @@ export class AdminService {
     return {
       users: users.map(u => ({
         ...u,
-        firstName: u.petOwner?.firstName || '',
-        lastName: u.petOwner?.lastName || '',
+        firstName: u.firstName || '',
+        lastName: u.lastName || '',
       })),
       pagination: {
         page,
@@ -252,7 +248,7 @@ export class AdminService {
     }
 
     // Get role-specific details
-    let roleDetails = null;
+    let roleDetails: any = null;
 
     if (user.userType === 'PET_OWNER') {
       roleDetails = await this.prisma.petOwner.findUnique({
@@ -355,5 +351,38 @@ export class AdminService {
     }
 
     return user;
+  }
+  private async sendApprovalEmail(vet: any) {
+    try {
+      if (!vet.user?.email) return;
+      await this.emailService.sendEmail({
+        to: vet.user.email,
+        subject: 'Veterinarian Profile Approved - VetCare',
+        html: `
+          <h2>Profile Approved</h2>
+          <p>Dear Veterinarian,</p>
+          <p>Your profile has been approved! You can now start accepting appointments.</p>
+          <p>Best regards,<br>VetCare Admin Team</p>
+        `,
+      });
+    } catch (error) {
+      console.error('Failed to send approval email:', error);
+    }
+  }
+
+  private async sendRejectionEmail(vet: any, reason: string) {
+    if (!vet.user?.email) return;
+    await this.emailService.sendEmail({
+      to: vet.user.email,
+      subject: 'Veterinarian Profile Update Required - VetCare',
+      html: `
+        <h2>Profile Update Required</h2>
+        <p>Dear Veterinarian,</p>
+        <p>We've reviewed your profile but require more information or corrections.</p>
+        <p><strong>Reason:</strong> ${reason}</p>
+        <p>Please update your profile to proceed.</p>
+        <p>Best regards,<br>VetCare Admin Team</p>
+      `,
+    });
   }
 }

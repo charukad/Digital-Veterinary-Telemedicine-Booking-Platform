@@ -29,13 +29,13 @@ export class VaccinationsService {
     const vaccination = await this.prisma.vaccination.create({
       data: {
         petId: createDto.petId,
-        veterinarianId: vet.id,
+        vetId: vet.id,
         vaccineName: createDto.vaccineName,
-        dateAdministered: new Date(createDto.dateAdministered),
+        administeredDate: new Date((createDto as any).dateAdministered || new Date()),
         nextDueDate: createDto.nextDueDate ? new Date(createDto.nextDueDate) : null,
         batchNumber: createDto.batchNumber,
-        manufacturer: createDto.manufacturer,
-        notes: createDto.notes,
+        // manufacturer: (createDto as any).manufacturer,
+        // notes: createDto.notes,
       },
       include: {
         pet: {
@@ -45,17 +45,7 @@ export class VaccinationsService {
             species: true,
           },
         },
-        veterinarian: {
-          select: {
-            id: true,
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
-        },
+        // veterinarian removed
       },
     });
 
@@ -113,19 +103,9 @@ export class VaccinationsService {
             breed: true,
           },
         },
-        veterinarian: {
-          select: {
-            id: true,
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
-        },
+        // veterinarian removed
       },
-      orderBy: { dateAdministered: 'desc' },
+      orderBy: { administeredDate: 'desc' },
     });
   }
 
@@ -142,17 +122,7 @@ export class VaccinationsService {
             dateOfBirth: true,
           },
         },
-        veterinarian: {
-          select: {
-            id: true,
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
-        },
+        // veterinarian removed
       },
     });
 
@@ -176,7 +146,7 @@ export class VaccinationsService {
         where: { userId },
       });
 
-      if (vaccination.veterinarianId !== vet?.id) {
+      if (vaccination.vetId !== vet?.id) {
         throw new ForbiddenException('You can only view your own vaccination records');
       }
     }
@@ -203,7 +173,7 @@ export class VaccinationsService {
       throw new NotFoundException('Vaccination record not found');
     }
 
-    if (vaccination.veterinarianId !== vet.id) {
+    if (vaccination.vetId !== vet.id) {
       throw new ForbiddenException('You can only update your own vaccination records');
     }
 
@@ -212,13 +182,13 @@ export class VaccinationsService {
       where: { id },
       data: {
         vaccineName: updateDto.vaccineName,
-        dateAdministered: updateDto.dateAdministered
-          ? new Date(updateDto.dateAdministered)
+        administeredDate: (updateDto as any).dateAdministered
+          ? new Date((updateDto as any).dateAdministered)
           : undefined,
         nextDueDate: updateDto.nextDueDate ? new Date(updateDto.nextDueDate) : undefined,
         batchNumber: updateDto.batchNumber,
-        manufacturer: updateDto.manufacturer,
-        notes: updateDto.notes,
+        // manufacturer: (updateDto as any).manufacturer,
+        // notes: (updateDto as any).notes,
         updatedAt: new Date(),
       },
       include: {
@@ -229,17 +199,7 @@ export class VaccinationsService {
             species: true,
           },
         },
-        veterinarian: {
-          select: {
-            id: true,
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
-        },
+        // veterinarian removed
       },
     });
   }
@@ -263,7 +223,7 @@ export class VaccinationsService {
       throw new NotFoundException('Vaccination record not found');
     }
 
-    if (vaccination.veterinarianId !== vet.id) {
+    if (vaccination.vetId !== vet.id) {
       throw new ForbiddenException('You can only delete your own vaccination records');
     }
 
@@ -292,19 +252,9 @@ export class VaccinationsService {
     return this.prisma.vaccination.findMany({
       where: { petId },
       include: {
-        veterinarian: {
-          select: {
-            id: true,
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
-        },
+        // veterinarian removed
       },
-      orderBy: { dateAdministered: 'desc' },
+      orderBy: { administeredDate: 'desc' },
     });
   }
 
@@ -341,7 +291,7 @@ export class VaccinationsService {
         return [];
       }
 
-      whereClause.veterinarianId = vet.id;
+      whereClause.vetId = vet.id;
     }
 
     return this.prisma.vaccination.findMany({

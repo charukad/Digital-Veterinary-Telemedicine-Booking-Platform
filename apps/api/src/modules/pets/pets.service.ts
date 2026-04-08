@@ -19,7 +19,7 @@ export class PetsService {
     // Create the pet
     const pet = await this.prisma.pet.create({
       data: {
-        ...createPetDto,
+        ...(createPetDto as any),
         ownerId: petOwner.id,
       },
     });
@@ -65,7 +65,7 @@ export class PetsService {
           take: 10,
         },
         vaccinations: {
-          orderBy: { date: 'desc' },
+          orderBy: { administeredDate: 'desc' },
           take: 10,
         },
       },
@@ -108,7 +108,7 @@ export class PetsService {
     // Update the pet
     const updatedPet = await this.prisma.pet.update({
       where: { id },
-      data: updatePetDto,
+      data: updatePetDto as any,
     });
 
     return updatedPet;

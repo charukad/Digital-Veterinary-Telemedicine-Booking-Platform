@@ -12,8 +12,8 @@ export class TelemedicineService {
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
   ) {
-    this.appId = this.configService.get<string>('AGORA_APP_ID');
-    this.appCertificate = this.configService.get<string>('AGORA_APP_CERTIFICATE');
+    this.appId = this.configService.get<string>('AGORA_APP_ID') || '';
+    this.appCertificate = this.configService.get<string>('AGORA_APP_CERTIFICATE') || '';
 
     if (!this.appId || !this.appCertificate) {
       console.warn('Agora App ID or Certificate is missing. Telemedicine features will be limited.');

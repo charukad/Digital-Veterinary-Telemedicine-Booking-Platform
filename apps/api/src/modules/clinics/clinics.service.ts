@@ -16,47 +16,56 @@ export class ClinicsService {
       throw new ForbiddenException('Only veterinarians can create clinics');
     }
 
-    return this.prisma.clinic.create({
+    // Clinic model has no ownerId, description - associate via ClinicVeterinarian
+    const clinic = await this.prisma.clinic.create({
       data: {
-        name: createDto.name,
-        registrationNumber: createDto.registrationNumber,
-        address: createDto.address,
-        latitude: createDto.latitude ? parseFloat(createDto.latitude) : null,
-        longitude: createDto.longitude ? parseFloat(createDto.longitude) : null,
-        phone: createDto.phone,
-        email: createDto.email,
-        operatingHours: createDto.operatingHours || {},
-        description: createDto.description,
-        ownerId: vet.id,
+        name: (createDto as any).name,
+        registrationNumber: (createDto as any).registrationNumber,
+        address: (createDto as any).address,
+        city: (createDto as any).city,
+        latitude: (createDto as any).latitude ? parseFloat((createDto as any).latitude) : null,
+        longitude: (createDto as any).longitude ? parseFloat((createDto as any).longitude) : null,
+        phone: (createDto as any).phone,
+        email: (createDto as any).email,
+        operatingHours: (createDto as any).operatingHours || {},
+        facilities: (createDto as any).facilities || [],
       },
     });
+
+    // Associate vet with clinic
+    await this.prisma.clinicVeterinarian.create({
+      data: {
+        clinicId: clinic.id,
+        veterinarianId: vet.id,
+        isPrimary: true,
+      },
+    });
+
+    return clinic;
   }
 
   async findAll(city?: string, search?: string) {
     const where: any = {};
 
     if (city) {
-      where.address = { contains: city, mode: 'insensitive' };
+      where.city = { contains: city, mode: 'insensitive' };
     }
 
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
+        { address: { contains: search, mode: 'insensitive' } },
       ];
     }
 
     return this.prisma.clinic.findMany({
       where,
       include: {
-        owner: {
+        veterinarians: {
           select: {
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-              },
-            },
+            id: true,
+            isPrimary: true,
+            veterinarianId: true,
           },
         },
       },
@@ -68,31 +77,11 @@ export class ClinicsService {
     const clinic = await this.prisma.clinic.findUnique({
       where: { id },
       include: {
-        owner: {
-          select: {
-            id: true,
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-                email: true,
-              },
-            },
-            specializations: true,
-            licenseNumber: true,
-          },
-        },
         veterinarians: {
           select: {
             id: true,
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-              },
-            },
-            specializations: true,
-            consultationFee: true,
+            isPrimary: true,
+            veterinarianId: true,
           },
         },
       },
@@ -122,22 +111,28 @@ export class ClinicsService {
       throw new NotFoundException('Clinic not found');
     }
 
-    if (clinic.ownerId !== vet.id) {
-      throw new ForbiddenException('You can only update your own clinics');
+    // Verify vet is associated with this clinic
+    const assoc = await this.prisma.clinicVeterinarian.findFirst({
+      where: { clinicId: id, veterinarianId: vet.id },
+    });
+
+    if (!assoc) {
+      throw new ForbiddenException('You can only update clinics you are associated with');
     }
 
     return this.prisma.clinic.update({
       where: { id },
       data: {
-        name: updateDto.name,
-        registrationNumber: updateDto.registrationNumber,
-        address: updateDto.address,
-        latitude: updateDto.latitude ? parseFloat(updateDto.latitude) : undefined,
-        longitude: updateDto.longitude ? parseFloat(updateDto.longitude) : undefined,
-        phone: updateDto.phone,
-        email: updateDto.email,
-        operatingHours: updateDto.operatingHours,
-        description: updateDto.description,
+        name: (updateDto as any).name,
+        registrationNumber: (updateDto as any).registrationNumber,
+        address: (updateDto as any).address,
+        city: (updateDto as any).city,
+        latitude: (updateDto as any).latitude ? parseFloat((updateDto as any).latitude) : undefined,
+        longitude: (updateDto as any).longitude ? parseFloat((updateDto as any).longitude) : undefined,
+        phone: (updateDto as any).phone,
+        email: (updateDto as any).email,
+        operatingHours: (updateDto as any).operatingHours,
+        facilities: (updateDto as any).facilities,
       },
     });
   }
@@ -159,8 +154,12 @@ export class ClinicsService {
       throw new NotFoundException('Clinic not found');
     }
 
-    if (clinic.ownerId !== vet.id) {
-      throw new ForbiddenException('You can only delete your own clinics');
+    const assoc = await this.prisma.clinicVeterinarian.findFirst({
+      where: { clinicId: id, veterinarianId: vet.id, isPrimary: true },
+    });
+
+    if (!assoc) {
+      throw new ForbiddenException('You can only delete clinics you own');
     }
 
     await this.prisma.clinic.delete({
@@ -179,9 +178,11 @@ export class ClinicsService {
       return [];
     }
 
-    return this.prisma.clinic.findMany({
-      where: { ownerId: vet.id },
-      orderBy: { createdAt: 'desc' },
+    const assocs = await this.prisma.clinicVeterinarian.findMany({
+      where: { veterinarianId: vet.id },
+      include: { clinic: true },
     });
+
+    return assocs.map((a) => a.clinic);
   }
 }

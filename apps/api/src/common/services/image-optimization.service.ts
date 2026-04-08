@@ -39,7 +39,7 @@ export class ImageOptimizationService {
     const [baseUrl, pathWithPublicId] = parts;
 
     // Build transformation string
-    const transformations = [];
+    const transformations: string[] = [];
 
     if (width) transformations.push(`w_${width}`);
     if (height) transformations.push(`h_${height}`);

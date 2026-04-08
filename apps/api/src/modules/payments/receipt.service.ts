@@ -98,7 +98,7 @@ export class ReceiptService {
         .text('Bill To:', 50, doc.y)
         .font('Helvetica')
         .fontSize(10)
-        .text(`${payment.appointment.owner.firstName} ${payment.appointment.owner.lastName}`)
+        .text(`${payment.appointment.petOwner.firstName} ${payment.appointment.petOwner.lastName}`)
         .text(payment.user.email)
         .moveDown();
 

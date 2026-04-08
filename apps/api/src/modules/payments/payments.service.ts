@@ -82,11 +82,12 @@ export class PaymentsService {
     const payment = await this.prisma.payment.create({
       data: {
         appointmentId,
+        userId,
         amount,
         currency: 'LKR',
         status: 'PENDING',
-        method: 'PAYHERE_CARD',
-        paymentData: {
+        paymentMethod: 'PAYHERE_CARD',
+        gatewayResponse: {
           appointmentType: appointment.type,
           petName: appointment.pet.name,
         },
@@ -113,8 +114,8 @@ export class PaymentsService {
       lastName: appointment.owner.lastName || 'Owner',
       email: appointment.owner.user.email,
       phone: appointment.owner.user.phone || '0000000000',
-      address: appointment.owner.address || 'Sri Lanka',
-      city: appointment.owner.city || 'Colombo',
+      address: 'Sri Lanka',
+      city: 'Colombo',
       country: 'Sri Lanka',
       returnUrl: this.configService.get('PAYHERE_RETURN_URL'),
       cancelUrl: this.configService.get('PAYHERE_CANCEL_URL'),
@@ -201,8 +202,8 @@ export class PaymentsService {
       data: {
         status: paymentStatus,
         transactionId: payment_id,
-        paymentData: {
-          ...((payment.paymentData as any) || {}),
+        gatewayResponse: {
+          ...((payment.gatewayResponse as any) || {}),
           method,
           statusMessage: status_message,
           cardHolderName: card_holder_name,
@@ -322,7 +323,7 @@ export class PaymentsService {
     const { appointment } = payment;
 
     await this.emailService.sendEmail({
-      to: appointment.owner.user.email,
+      to: appointment.owner?.user?.email || appointment.user?.email || 'user@example.com',
       subject: '✅ Payment Receipt - VetCare Sri Lanka',
       html: `
 <!DOCTYPE html>
@@ -344,7 +345,7 @@ export class PaymentsService {
 
           <tr>
             <td style="padding: 40px 30px;">
-              <p style="font-size: 16px; color: #333; margin: 0 0 20px;">Dear ${appointment.owner.firstName || 'Pet Owner'},</p>
+              <p style="font-size: 16px; color: #333; margin: 0 0 20px;">Dear ${appointment.owner?.user?.firstName || 'Pet Owner'},</p>
 
               <p style="font-size: 16px; color: #333; margin: 0 0 30px;">Your payment has been successfully processed. Here are your transaction details:</p>
 
