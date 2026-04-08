@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import apiClient from '@/lib/api-client';
 
@@ -26,8 +26,15 @@ interface Vet {
   }>;
 }
 
-export default function VetSearchPage() {
-  const router = useRouter();
+function VetSearchPageFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+    </div>
+  );
+}
+
+function VetSearchPageContent() {
   const searchParams = useSearchParams();
   const [vets, setVets] = useState<Vet[]>([]);
   const [loading, setLoading] = useState(true);
@@ -262,5 +269,13 @@ export default function VetSearchPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function VetSearchPage() {
+  return (
+    <Suspense fallback={<VetSearchPageFallback />}>
+      <VetSearchPageContent />
+    </Suspense>
   );
 }

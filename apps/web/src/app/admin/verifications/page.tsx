@@ -61,7 +61,7 @@ export default function VerificationQueue() {
     setProcessingVetId(vetId);
     try {
       await apiClient.post(`/admin/verify/${vetId}/approve`, {
-        adminId: user?.userId,
+        adminId: user?.id,
       });
       alert('Veterinarian approved successfully!');
       fetchQueue();
@@ -79,7 +79,7 @@ export default function VerificationQueue() {
     setProcessingVetId(vetId);
     try {
       await apiClient.post(`/admin/verify/${vetId}/reject`, {
-        adminId: user?.userId,
+        adminId: user?.id,
         reason,
       });
       alert('Rejection email sent');

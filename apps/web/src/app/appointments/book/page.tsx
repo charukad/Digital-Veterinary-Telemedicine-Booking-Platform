@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import apiClient from '@/lib/api-client';
@@ -14,7 +14,15 @@ interface Pet {
   species: string;
 }
 
-export default function BookAppointmentPage() {
+function BookAppointmentPageFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+    </div>
+  );
+}
+
+function BookAppointmentPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, loading: authLoading } = useAuth();
@@ -311,5 +319,13 @@ export default function BookAppointmentPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function BookAppointmentPage() {
+  return (
+    <Suspense fallback={<BookAppointmentPageFallback />}>
+      <BookAppointmentPageContent />
+    </Suspense>
   );
 }
